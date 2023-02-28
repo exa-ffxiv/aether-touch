@@ -1,7 +1,9 @@
+using AetherTouch.App.Common;
 using AetherTouch.App.Patterns;
 using AetherTouch.App.Triggers;
 using Buttplug.Client;
 using Buttplug.Client.Connectors.WebsocketConnector;
+using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Interface.Windowing;
 using Dalamud.Utility;
@@ -12,6 +14,7 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using TextCopy;
 
 namespace AetherTouch.App.Windows
 {
@@ -35,7 +38,7 @@ namespace AetherTouch.App.Windows
             "Aether Touch Configuration",
             ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
         {
-            this.Size = new Vector2(400, 400);
+            this.Size = new Vector2(1000, 400);
             this.SizeCondition = ImGuiCond.Appearing;
 
             this.plugin = plugin;
@@ -190,15 +193,27 @@ namespace AetherTouch.App.Windows
             {
                 if (selectedPattern != null)
                 {
-                    if (ImGui.InputText("Name", ref selectedPattern.Name, 500))
+                    ImGui.Text(selectedPattern.Id.ToString());
+                    ImGui.SameLine();
+                    if (ImGui.Button("Copy ID"))
+                    {
+                        ClipboardService.SetText(selectedPattern.Id.ToString());
+                    }
+                    if (ImGui.InputText("Name", ref selectedPattern.Name, 500, ImGuiInputTextFlags.CharsNoBlank))
                     {
                         plugin.Configuration.Patterns[selectedPatternId] = selectedPattern;
                         plugin.Configuration.Save();
                     }
-                    if (ImGui.InputText("Pattern", ref selectedPattern.PatternText, 10000))
+                    if (ImGui.InputText("Pattern", ref selectedPattern.PatternText, 1000000, ImGuiInputTextFlags.CharsNoBlank))
                     {
                         plugin.Configuration.Patterns[selectedPatternId] = selectedPattern;
                         plugin.Configuration.Save();
+                    }
+                    if (ImGui.Button("Delete"))
+                    {
+                        var temp = selectedPattern;
+                        selectedPattern = null;
+                        plugin.Configuration.Patterns.Remove(temp.Id);
                     }
                 }
 
@@ -217,7 +232,7 @@ namespace AetherTouch.App.Windows
                 {
                     if (!newTriggerName.IsNullOrWhitespace())
                     {
-                        var tempTrigger = new RegexTrigger(newTriggerName);
+                        var tempTrigger = new Trigger(newTriggerName);
                         plugin.Configuration.Triggers.Add(tempTrigger.Id, tempTrigger);
                         plugin.Configuration.Save();
                         newTriggerName = "";
@@ -247,15 +262,34 @@ namespace AetherTouch.App.Windows
                         plugin.Configuration.Triggers[selectedTriggerId] = selectedTrigger;
                         plugin.Configuration.Save();
                     }
+                    if (ImGui.InputText("PatternId", ref selectedTrigger.patternId, 36))
+                    {
+                        plugin.Configuration.Triggers[selectedTriggerId] = selectedTrigger;
+                        plugin.Configuration.Save();
+                    }
+                    if (ImGui.InputText("Regex", ref selectedTrigger.regexPattern, 36))
+                    {
+                        plugin.Configuration.Triggers[selectedTriggerId] = selectedTrigger;
+                        plugin.Configuration.Save();
+                    }
+                    var chatTypes = Enum.GetNames(typeof(ChatTypes));
+                    int selectedChatType = (int)selectedTrigger.chatType;
+                    if (ImGui.Combo("##ChatTypeCombo", ref selectedChatType, chatTypes, chatTypes.Length))
+                    {
+                        selectedTrigger.chatType = (ChatTypes)selectedChatType;
+                        plugin.Configuration.Triggers[selectedTriggerId] = selectedTrigger;
+                        plugin.Configuration.Save();
+                    }
+                    if (ImGui.Button("Delete"))
+                    {
+                        var temp = selectedTrigger;
+                        selectedTrigger = null;
+                        plugin.Configuration.Triggers.Remove(temp.Id);
+                    }
                 }
                 
                 ImGui.EndChild();
             }
-        }
-
-        public void DrawRegexTrigger()
-        {
-
         }
     }
 }
