@@ -4,21 +4,24 @@ using System;
 
 namespace AetherTouch.App.Triggers
 {
-    public class Trigger
+    public class Trigger: IComparable<Trigger>
     {
         public Guid Id { get; init; }
 
         public string Name;
         public bool enabled = true;
-        public string regexPattern;
+        public string messageRegex;
+        public string senderRegex;
         public ChatTypes chatType;
         public string patternId = Guid.Empty.ToString();
+        public int priority = 0;
 
         public Trigger()
         {
             this.Name = string.Empty;
             this.Id = Guid.Empty;
-            this.regexPattern = string.Empty;
+            this.messageRegex = string.Empty;
+            this.senderRegex = string.Empty;
             this.chatType = ChatTypes.Any;
         }
 
@@ -26,8 +29,15 @@ namespace AetherTouch.App.Triggers
         { 
             this.Name = name;
             this.Id = Guid.NewGuid();
-            this.regexPattern = string.Empty;
+            this.messageRegex = string.Empty;
+            this.senderRegex = string.Empty;
             this.chatType = ChatTypes.Any;
+        }
+
+        public int CompareTo(Trigger? other)
+        {
+            if (other == null) return 1;
+            return -this.priority.CompareTo(other.priority);
         }
     }
 }

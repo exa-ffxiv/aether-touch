@@ -259,26 +259,30 @@ namespace AetherTouch.App.Windows
                 {
                     if (ImGui.InputText("Name", ref selectedTrigger.Name, 500))
                     {
-                        plugin.Configuration.Triggers[selectedTriggerId] = selectedTrigger;
-                        plugin.Configuration.Save();
+                        SaveTrigger();
                     }
                     if (ImGui.InputText("PatternId", ref selectedTrigger.patternId, 36))
                     {
-                        plugin.Configuration.Triggers[selectedTriggerId] = selectedTrigger;
-                        plugin.Configuration.Save();
+                        SaveTrigger();
                     }
-                    if (ImGui.InputText("Regex", ref selectedTrigger.regexPattern, 36))
+                    if (ImGui.InputText("Message Regex", ref selectedTrigger.messageRegex, 10000))
                     {
-                        plugin.Configuration.Triggers[selectedTriggerId] = selectedTrigger;
-                        plugin.Configuration.Save();
+                        SaveTrigger();
+                    }
+                    if (ImGui.InputText("Sender Regex", ref selectedTrigger.senderRegex, 10000))
+                    {
+                        SaveTrigger();
                     }
                     var chatTypes = Enum.GetNames(typeof(ChatTypes));
                     int selectedChatType = (int)selectedTrigger.chatType;
                     if (ImGui.Combo("##ChatTypeCombo", ref selectedChatType, chatTypes, chatTypes.Length))
                     {
                         selectedTrigger.chatType = (ChatTypes)selectedChatType;
-                        plugin.Configuration.Triggers[selectedTriggerId] = selectedTrigger;
-                        plugin.Configuration.Save();
+                        SaveTrigger();
+                    }
+                    if (ImGui.InputInt("Priority", ref selectedTrigger.priority, 1))
+                    {
+                        SaveTrigger();
                     }
                     if (ImGui.Button("Delete"))
                     {
@@ -290,6 +294,13 @@ namespace AetherTouch.App.Windows
                 
                 ImGui.EndChild();
             }
+        }
+
+        private void SaveTrigger()
+        {
+            if (selectedTrigger == null) return;
+            plugin.Configuration.Triggers[selectedTriggerId] = selectedTrigger;
+            plugin.Configuration.Save();
         }
     }
 }

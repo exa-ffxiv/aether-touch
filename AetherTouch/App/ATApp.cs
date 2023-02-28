@@ -1,3 +1,4 @@
+using AetherTouch.App.Triggers;
 using AetherTouch.App.Windows;
 using Buttplug.Client;
 using Buttplug.Client.Connectors.WebsocketConnector;
@@ -18,6 +19,7 @@ namespace AetherTouch.App
         private Plugin Plugin { get; init; }
         private ChatGui? DalaChat { get; init; }
         public ButtplugClient client { get; init; }
+        public TriggerService triggerService { get; init; }
 
         public PluginUI PluginUI { get; init; }
 
@@ -36,24 +38,22 @@ namespace AetherTouch.App
             
             client = new ButtplugClient("Aether Touch Client");
             PluginUI = new PluginUI(plugin, client, this);
+            triggerService = new TriggerService(plugin, client);
         }
 
         private void DalaChat_ChatMessage(XivChatType type, uint senderId, ref SeString sender, ref SeString message, ref bool isHandled)
         {
-            Dalamud.Logging.PluginLog.Information($"Chat recieved. Type={type} sender={sender.TextValue} message={message.TextValue}");
-            var pattern = @"[Vv]ibe 100";
-            var rgx = new Regex(pattern);
-            if (rgx.IsMatch(message.TextValue))
-            {
-                //Dalamud.Logging.PluginLog.Information($"Match message='{message.TextValue}' regex='{pattern}'");
-                if (client != null && client.Devices.Length > 0)
-                {
-                    client.Devices[0].VibrateAsync(1);
-                }
-            }
-            //else
+            triggerService.ProcessTextTriggers(type, sender.TextValue, message.TextValue);
+            //Dalamud.Logging.PluginLog.Information($"Chat recieved. Type={type} sender={sender.TextValue} message={message.TextValue}");
+            //var pattern = @"[Vv]ibe 100";
+            //var rgx = new Regex(pattern);
+            //if (rgx.IsMatch(message.TextValue))
             //{
-            //    Dalamud.Logging.PluginLog.Information($"Mismatch message='{message.TextValue}' regex='{pattern}'");
+            //    //Dalamud.Logging.PluginLog.Information($"Match message='{message.TextValue}' regex='{pattern}'");
+            //    if (client != null && client.Devices.Length > 0)
+            //    {
+            //        client.Devices[0].VibrateAsync(1);
+            //    }
             //}
         }
 

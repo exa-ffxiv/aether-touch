@@ -11,7 +11,8 @@ namespace AetherTouch.App.Common
         Any,
         Party,
         Say,
-        Tell,
+        TellIncoming,
+        TellOutgoing,
         Combat
     }
 }
