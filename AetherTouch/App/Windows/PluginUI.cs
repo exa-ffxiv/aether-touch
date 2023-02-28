@@ -1,8 +1,10 @@
+using AetherTouch.App.Patterns;
 using AetherTouch.App.Triggers;
 using Buttplug.Client;
 using Buttplug.Client.Connectors.WebsocketConnector;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Interface.Windowing;
+using Dalamud.Utility;
 using ImGuiNET;
 using System;
 using System.Collections.Generic;
@@ -23,6 +25,11 @@ namespace AetherTouch.App.Windows
         private string newTriggerName = string.Empty;
         private Trigger? selectedTrigger = null;
         private Guid selectedTriggerId = Guid.Empty;
+
+        private string patternSearchText = string.Empty;
+        private string newPatternName = string.Empty;
+        private Pattern? selectedPattern = null;
+        private Guid selectedPatternId = Guid.Empty;
 
         public PluginUI(Plugin plugin, ButtplugClient client, ATApp app): base(
             "Aether Touch Configuration",
@@ -149,9 +156,54 @@ namespace AetherTouch.App.Windows
 
         public void DrawPatterns()
         {
-            ImGui.BeginGroup();
-            ImGui.Text("Patterns");
-            ImGui.EndGroup();
+            if (ImGui.BeginChild("##PatternsList", new Vector2(200, -ImGui.GetFrameHeightWithSpacing()), true))
+            {
+                ImGui.SetNextItemWidth(150);
+                ImGui.InputText("##newPatternName", ref newPatternName, 500);
+                ImGui.SameLine();
+                if (ImGui.Button("+", new Vector2(23, 23)))
+                {
+                    if (!newPatternName.IsNullOrWhitespace())
+                    {
+                        var tempPattern = new Pattern(newPatternName);
+                        plugin.Configuration.Patterns.Add(tempPattern.Id, tempPattern);
+                        plugin.Configuration.Save();
+                        newPatternName = "";
+                    }
+                }
+                ImGui.Spacing();
+
+                foreach (var pattern in plugin.Configuration.Patterns.Values)
+                {
+                    if (ImGui.Selectable($"{pattern.Name}###{pattern.Id}", pattern.Id == selectedPatternId))
+                    {
+                        selectedPattern = pattern;
+                        selectedPatternId = pattern.Id;
+                    }
+                }
+
+                ImGui.EndChild();
+            }
+
+            ImGui.SameLine();
+            if (ImGui.BeginChild("##SelectedPattern", new Vector2(0, -ImGui.GetFrameHeightWithSpacing()), true))
+            {
+                if (selectedPattern != null)
+                {
+                    if (ImGui.InputText("Name", ref selectedPattern.Name, 500))
+                    {
+                        plugin.Configuration.Patterns[selectedPatternId] = selectedPattern;
+                        plugin.Configuration.Save();
+                    }
+                    if (ImGui.InputText("Pattern", ref selectedPattern.PatternText, 10000))
+                    {
+                        plugin.Configuration.Patterns[selectedPatternId] = selectedPattern;
+                        plugin.Configuration.Save();
+                    }
+                }
+
+                ImGui.EndChild();
+            }
         }
 
         public void DrawTriggers()
@@ -163,10 +215,13 @@ namespace AetherTouch.App.Windows
                 ImGui.SameLine();
                 if (ImGui.Button("+", new Vector2(23,23)))
                 {
-                    var tempTrigger = new RegexTrigger(newTriggerName);
-                    plugin.Configuration.Triggers.Add(tempTrigger.Id, tempTrigger);
-                    plugin.Configuration.Save();
-                    newTriggerName = "";
+                    if (!newTriggerName.IsNullOrWhitespace())
+                    {
+                        var tempTrigger = new RegexTrigger(newTriggerName);
+                        plugin.Configuration.Triggers.Add(tempTrigger.Id, tempTrigger);
+                        plugin.Configuration.Save();
+                        newTriggerName = "";
+                    }
                 }
                 ImGui.Spacing();
 

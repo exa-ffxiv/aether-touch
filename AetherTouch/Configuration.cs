@@ -1,3 +1,4 @@
+using AetherTouch.App.Patterns;
 using AetherTouch.App.Triggers;
 using Dalamud.Configuration;
 using Dalamud.Plugin;
@@ -15,6 +16,7 @@ namespace AetherTouch
         public int ButtplugIOPort { get; set; } = 12345;
 
         public Dictionary<Guid, Trigger> Triggers { get; set; } = new();
+        public Dictionary<Guid, Pattern> Patterns { get; set; } = new();
 
         // the below exist just to make saving less cumbersome
         [NonSerialized]
