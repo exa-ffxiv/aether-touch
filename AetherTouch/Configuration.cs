@@ -26,6 +26,7 @@ namespace AetherTouch
             set
             {
                 _triggers = value;
+                // TODO: Figure out why sortedActiveTriggers has 0 members
                 if (_triggers != null)
                 {
                     sortedActiveTriggers = Triggers.Values.Where(x => x.enabled).ToList();
