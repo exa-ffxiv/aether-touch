@@ -22,5 +22,10 @@ namespace AetherTouch.App.Common
         {
             Dalamud.Logging.PluginLog.Information(message);
         }
+
+        public static void Debug(string message)
+        {
+            Dalamud.Logging.PluginLog.Debug(message);
+        }
     }
 }

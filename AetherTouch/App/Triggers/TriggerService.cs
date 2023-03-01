@@ -3,9 +3,11 @@ using AetherTouch.App.Patterns;
 using Buttplug.Client;
 using Dalamud.Game.Text;
 using Dalamud.Utility;
+using Lumina.Data.Parsing.Layer;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -23,7 +25,6 @@ namespace AetherTouch.App.Triggers
         private Trigger? currentRunningTrigger = null;
         private Task? activeTask = null;
         private CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
-        private CancellationToken cancelToken;
 
         public TriggerService(Plugin plugin, ButtplugClient client)
         { 
@@ -34,11 +35,11 @@ namespace AetherTouch.App.Triggers
         public void ProcessTextTriggers(XivChatType type, string sender, string message)
         {
             var triggers = plugin.Configuration.GetSortedActiveTriggers();
-            //Logger.Info($"mainCount={plugin.Configuration.Triggers.Count()} sortedActiveCount={triggers.Count}");
+            Logger.Debug($"Recieved message. type={type} sender={sender} message={message}");
             if (triggers.Count == 0) return;
             foreach (var trigger in triggers) 
             {
-                //Logger.Info($"Processing trigger={trigger.Name} type={trigger.chatType}");
+                Logger.Debug($"Processing trigger={trigger.Name} type={trigger.chatType}");
                 if (chatTypeMatch(type, trigger.chatType) &&
                     senderMatch(sender, trigger.senderRegex) &&
                     messageMatch(message, trigger.messageRegex) &&
@@ -49,7 +50,7 @@ namespace AetherTouch.App.Triggers
                         Logger.Warning($"Triggered but client is not setup. connected={client?.Connected} deviceCount={client?.Devices.Length}");
                         return;
                     }
-                    Logger.Info("Trigger triggered.");
+                    Logger.Debug("Trigger triggered.");
                     RunTrigger(trigger);
                     break;
                 }
@@ -58,7 +59,7 @@ namespace AetherTouch.App.Triggers
 
         private bool chatTypeMatch(XivChatType xivType, ChatTypes atType)
         {
-            return atType switch
+            var t = atType switch
             {
                 ChatTypes.Any => true,
                 ChatTypes.Say => xivType == XivChatType.Say,
@@ -68,18 +69,24 @@ namespace AetherTouch.App.Triggers
                 ChatTypes.TellOutgoing => xivType == XivChatType.TellOutgoing,
                 _ => false,
             };
+            Logger.Debug($"ChatType compare. result={t} xivType={xivType} atType={atType}");
+            return t;
         }
 
         private bool senderMatch(string sender, string senderRegex)
         {
             if (senderRegex.IsNullOrWhitespace()) return true;
-            return new Regex(senderRegex).IsMatch(sender);
+            var t =  new Regex(senderRegex).IsMatch(sender);
+            Logger.Debug($"Sender compare. result={t} sender='{sender}' reges='{senderRegex}'");
+            return t;
         }
 
         private bool messageMatch(string message, string messageRegex)
         {
             if (messageRegex.IsNullOrWhitespace()) return true;
-            return new Regex(messageRegex).IsMatch(message);
+            var t = new Regex(messageRegex).IsMatch(message);
+            Logger.Debug($"Message compare. result={t} sender='{message}' reges='{messageRegex}'");
+            return t;
         }
 
         private bool shouldOverrideRunningTrigger(Trigger newTrigger)
@@ -94,41 +101,42 @@ namespace AetherTouch.App.Triggers
 
         // TODO: A lot more error handling
         // TODO: Let different devices get different patterns?
-        // TODO: Figure out how to properly cancel a task/thread when a new trigger is triggered.
         private void RunTrigger(Trigger trigger)
         {
-            if (activeTask != null &&  !activeTask.IsCompleted)
+            if (activeTask != null)
             {
                 cancelTokenSource.Cancel();
+                activeTask = null;
             }
-            cancelToken = cancelTokenSource.Token;
             if (Guid.TryParse(trigger.patternId, out var patternGuid) && plugin.Configuration.Patterns.TryGetValue(patternGuid, out var pattern))
             {
-                var patternParts = pattern.PatternText.Split(',').Reverse();
+                cancelTokenSource = new CancellationTokenSource();
+                activeTask = Task.Run(() => TriggerTask(cancelTokenSource.Token, pattern));
+            }
+        }
 
-                var task = Task.Run(async () =>
+        private async Task TriggerTask(CancellationToken cancelToken, Pattern pattern)
+        {
+            var patternParts = pattern.PatternText.Split(',').Reverse();
+            var patternStack = new Stack<string>();
+            foreach (var part in patternParts) { patternStack.Push(part); }
+            foreach (var part in patternStack)
+            {
+                var splitVals = part.Split(":");
+                var intensity = double.Parse(splitVals[0]);
+                var duration = int.Parse(splitVals[1]);
+                Logger.Info($"Starting pattern part. intensity={intensity / 100} duration={duration}");
+                foreach (var device in client.Devices)
                 {
-                    var patternStack = new Stack<string>();
-                    foreach (var part in patternParts) { patternStack.Push(part); }
-                    foreach (var part in patternStack)
-                    {
-                        var splitVals = part.Split(":");
-                        var intensity = double.Parse(splitVals[0]);
-                        var duration = int.Parse(splitVals[1]);
-                        Logger.Info($"Starting pattern part. intensity={intensity / 100} duration={duration}");
-                        foreach (var device in client.Devices)
-                        {
-                            device.VibrateAsync(intensity / 100);
-                        }
-                        await Task.Delay(duration);
-                        if (cancelToken.IsCancellationRequested) return;
-                    }
+                    device.VibrateAsync(intensity / 100);
+                }
+                await Task.Delay(duration);
+                if (cancelToken.IsCancellationRequested) return;
+            }
 
-                    foreach (var device in client.Devices)
-                    {
-                        device.VibrateAsync(0);
-                    }
-                });
+            foreach (var device in client.Devices)
+            {
+                device.VibrateAsync(0);
             }
         }
     }
