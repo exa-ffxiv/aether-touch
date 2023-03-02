@@ -261,9 +261,32 @@ namespace AetherTouch.App.Windows
                     {
                         SaveTrigger();
                     }
-                    if (ImGui.InputText("PatternId", ref selectedTrigger.patternId, 36))
+                    //if (ImGui.InputText("PatternId", ref selectedTrigger.patternId, 36))
+                    //{
+                    //    SaveTrigger();
+                    //}
+                    var patternName = "";
+                    if (plugin.Configuration.Patterns.TryGetValue(Guid.Parse(selectedTrigger.patternId), out var p))
                     {
-                        SaveTrigger();
+                        patternName = p.Name;
+                    }
+                    else
+                    {
+                        patternName = "None";
+                    }
+                    if (ImGui.BeginCombo("Pattern", patternName))
+                    {
+                        string s = "";
+                        ImGui.InputTextWithHint("##PatternFilter", "Filter...", ref s, 1000);
+                        foreach (var pattern in plugin.Configuration.Patterns)
+                        {
+                            if (ImGui.Selectable($"{pattern.Value.Name}###{pattern.Value.Id}", selectedTrigger.patternId == pattern.Value.Id.ToString()))
+                            {
+                                selectedTrigger.patternId = pattern.Value.Id.ToString();
+                                SaveTrigger();
+                            }
+                        }
+                        ImGui.EndCombo();
                     }
                     if (ImGui.InputText("Message Regex", ref selectedTrigger.messageRegex, 10000))
                     {
