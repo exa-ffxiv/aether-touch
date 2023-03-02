@@ -108,7 +108,7 @@ namespace AetherTouch.App.Triggers
                 cancelTokenSource.Cancel();
                 activeTask = null;
             }
-            if (Guid.TryParse(trigger.patternId, out var patternGuid) && plugin.Configuration.Patterns.TryGetValue(patternGuid, out var pattern))
+            if (plugin.Configuration.Patterns.TryGetValue(trigger.patternId, out var pattern))
             {
                 cancelTokenSource = new CancellationTokenSource();
                 activeTask = Task.Run(() => TriggerTask(cancelTokenSource.Token, pattern));

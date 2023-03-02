@@ -261,12 +261,9 @@ namespace AetherTouch.App.Windows
                     {
                         SaveTrigger();
                     }
-                    //if (ImGui.InputText("PatternId", ref selectedTrigger.patternId, 36))
-                    //{
-                    //    SaveTrigger();
-                    //}
+                    // TODO: Pretty up combo box and see about keeping search box at the top
                     var patternName = "";
-                    if (plugin.Configuration.Patterns.TryGetValue(Guid.Parse(selectedTrigger.patternId), out var p))
+                    if (plugin.Configuration.Patterns.TryGetValue(selectedTrigger.patternId, out var p))
                     {
                         patternName = p.Name;
                     }
@@ -280,9 +277,9 @@ namespace AetherTouch.App.Windows
                         ImGui.InputTextWithHint("##PatternFilter", "Filter...", ref s, 1000);
                         foreach (var pattern in plugin.Configuration.Patterns)
                         {
-                            if (ImGui.Selectable($"{pattern.Value.Name}###{pattern.Value.Id}", selectedTrigger.patternId == pattern.Value.Id.ToString()))
+                            if (ImGui.Selectable($"{pattern.Value.Name}###{pattern.Value.Id}", selectedTrigger.patternId == pattern.Value.Id))
                             {
-                                selectedTrigger.patternId = pattern.Value.Id.ToString();
+                                selectedTrigger.patternId = pattern.Value.Id;
                                 SaveTrigger();
                             }
                         }
@@ -312,6 +309,7 @@ namespace AetherTouch.App.Windows
                         var temp = selectedTrigger;
                         selectedTrigger = null;
                         plugin.Configuration.Triggers.Remove(temp.Id);
+                        plugin.Configuration.Save();
                     }
                 }
                 

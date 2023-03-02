@@ -13,7 +13,7 @@ namespace AetherTouch.App.Triggers
         public string messageRegex;
         public string senderRegex;
         public ChatTypes chatType;
-        public string patternId = Guid.Empty.ToString();
+        public Guid patternId = Guid.Empty;
         public int priority = 0;
 
         public Trigger()
