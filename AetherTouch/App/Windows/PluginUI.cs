@@ -333,6 +333,10 @@ namespace AetherTouch.App.Windows
                     {
                         SaveTrigger();
                     }
+                    if (ImGui.Checkbox("Enabled", ref selectedTrigger.enabled))
+                    {
+                        SaveTrigger();
+                    }
                     if (ImGui.Button("Delete"))
                     {
                         var temp = selectedTrigger;
@@ -340,6 +344,7 @@ namespace AetherTouch.App.Windows
                         plugin.Configuration.Triggers.Remove(temp.Id);
                         plugin.Configuration.Save();
                     }
+
                 }
                 
                 ImGui.EndChild();
