@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using TextCopy;
 
@@ -33,6 +34,8 @@ namespace AetherTouch.App.Windows
         private string newPatternName = string.Empty;
         private Pattern? selectedPattern = null;
         private Guid selectedPatternId = Guid.Empty;
+
+        private string triggerSearchName = string.Empty;
 
         public PluginUI(Plugin plugin, ButtplugClient client, ATApp app): base(
             "Aether Touch Configuration",
@@ -162,7 +165,7 @@ namespace AetherTouch.App.Windows
             if (ImGui.BeginChild("##PatternsList", new Vector2(200, -ImGui.GetFrameHeightWithSpacing()), true))
             {
                 ImGui.SetNextItemWidth(150);
-                ImGui.InputText("##newPatternName", ref newPatternName, 500);
+                ImGui.InputTextWithHint("##newPatternName", "New Pattern Name...", ref newPatternName, 500);
                 ImGui.SameLine();
                 if (ImGui.Button("+", new Vector2(23, 23)))
                 {
@@ -174,10 +177,15 @@ namespace AetherTouch.App.Windows
                         newPatternName = "";
                     }
                 }
+                string patternSearchName = "";
+                ImGui.SetNextItemWidth(180);
+                ImGui.InputTextWithHint("##patternSearch", "Filter...", ref patternSearchName, 500);
                 ImGui.Spacing();
 
+                var patternRegex = new Regex(patternSearchName, RegexOptions.IgnoreCase);
                 foreach (var pattern in plugin.Configuration.Patterns.Values)
                 {
+                    if (!patternRegex.IsMatch(pattern.Name)) continue;
                     if (ImGui.Selectable($"{pattern.Name}###{pattern.Id}", pattern.Id == selectedPatternId))
                     {
                         selectedPattern = pattern;
@@ -226,7 +234,7 @@ namespace AetherTouch.App.Windows
             if (ImGui.BeginChild("##TriggersList", new Vector2(200, -ImGui.GetFrameHeightWithSpacing()), true))
             {
                 ImGui.SetNextItemWidth(150);
-                ImGui.InputText("##newTriggerName", ref newTriggerName, 500);
+                ImGui.InputTextWithHint("##newTriggerName", "New Trigger Name...", ref newTriggerName, 500);
                 ImGui.SameLine();
                 if (ImGui.Button("+", new Vector2(23,23)))
                 {
@@ -238,10 +246,15 @@ namespace AetherTouch.App.Windows
                         newTriggerName = "";
                     }
                 }
+                string tempTriggerSearchName = "";
+                ImGui.SetNextItemWidth(180);
+                ImGui.InputTextWithHint("##triggerSearch", "Filter...", ref tempTriggerSearchName, 500);
                 ImGui.Spacing();
 
+                var triggerRegex = new Regex(tempTriggerSearchName, RegexOptions.IgnoreCase);
                 foreach (var trigPair in plugin.Configuration.Triggers)
                 {
+                    if (!triggerRegex.IsMatch(trigPair.Value.Name)) continue;
                     if (ImGui.Selectable($"{trigPair.Value.Name}###{trigPair.Value.Id}", trigPair.Value.Id == selectedTriggerId))
                     {
                         selectedTrigger = trigPair.Value;
@@ -273,10 +286,12 @@ namespace AetherTouch.App.Windows
                     }
                     if (ImGui.BeginCombo("Pattern", patternName))
                     {
-                        string s = "";
-                        ImGui.InputTextWithHint("##PatternFilter", "Filter...", ref s, 1000);
+                        string triggerPatternIdSearch = "";
+                        ImGui.InputTextWithHint("##PatternFilter", "Filter...", ref triggerPatternIdSearch, 1000);
+                        Regex patternNameRegex = new Regex(triggerPatternIdSearch, RegexOptions.IgnoreCase);
                         foreach (var pattern in plugin.Configuration.Patterns)
                         {
+                            if (!patternNameRegex.IsMatch(pattern.Value.Name)) continue;
                             if (ImGui.Selectable($"{pattern.Value.Name}###{pattern.Value.Id}", selectedTrigger.patternId == pattern.Value.Id))
                             {
                                 selectedTrigger.patternId = pattern.Value.Id;
