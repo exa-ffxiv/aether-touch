@@ -1,3 +1,4 @@
+using AetherTouch.App.Common;
 using AetherTouch.App.Triggers;
 using AetherTouch.App.Windows;
 using Buttplug.Client;
@@ -23,6 +24,8 @@ namespace AetherTouch.App
 
         public PluginUI PluginUI { get; init; }
 
+        public bool ClientConnecting { get; set; } = false;
+
         public ATApp(Plugin plugin, ChatGui? dalaChat)
         {
             Plugin = plugin;
@@ -39,22 +42,16 @@ namespace AetherTouch.App
             client = new ButtplugClient("Aether Touch Client");
             PluginUI = new PluginUI(plugin, client, this);
             triggerService = new TriggerService(plugin, client);
+
+            if (client != null && !client.Connected && plugin.Configuration.AutoConnect)
+            {
+                ConnectButtplugIO();
+            }
         }
 
         private void DalaChat_ChatMessage(XivChatType type, uint senderId, ref SeString sender, ref SeString message, ref bool isHandled)
         {
             triggerService.ProcessTextTriggers(type, sender.TextValue, message.TextValue);
-            //Dalamud.Logging.PluginLog.Information($"Chat recieved. Type={type} sender={sender.TextValue} message={message.TextValue}");
-            //var pattern = @"[Vv]ibe 100";
-            //var rgx = new Regex(pattern);
-            //if (rgx.IsMatch(message.TextValue))
-            //{
-            //    //Dalamud.Logging.PluginLog.Information($"Match message='{message.TextValue}' regex='{pattern}'");
-            //    if (client != null && client.Devices.Length > 0)
-            //    {
-            //        client.Devices[0].VibrateAsync(1);
-            //    }
-            //}
         }
 
         public async void Dispose()
@@ -67,7 +64,7 @@ namespace AetherTouch.App
             if (client.Connected) await client.DisconnectAsync();
         }
 
-        public async void ConnectButtplugIO()
+        public void ConnectButtplugIO()
         {
             var address = this.Plugin.Configuration.ButtplugIOAddress;
             var port = this.Plugin.Configuration.ButtplugIOPort;
@@ -77,7 +74,22 @@ namespace AetherTouch.App
             {
                 if (client != null && !client.Connected)
                 {
-                    await client.ConnectAsync(new ButtplugWebsocketConnector(new Uri(uri)));
+                    ClientConnecting = true;
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await client.ConnectAsync(new ButtplugWebsocketConnector(new Uri(uri)));
+                        }
+                        catch (Exception ex)
+                        {
+                            Dalamud.Logging.PluginLog.Error($"Failed to connect to server. Uri={uri} Exception={ex}");
+                        }
+                        finally
+                        {
+                            ClientConnecting = false;
+                        }
+                    });
                 }
             }
             catch (Exception ex)

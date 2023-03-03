@@ -125,7 +125,7 @@ namespace AetherTouch.App.Triggers
                 var splitVals = part.Split(":");
                 var intensity = double.Parse(splitVals[0]);
                 var duration = int.Parse(splitVals[1]);
-                Logger.Info($"Starting pattern part. intensity={intensity / 100} duration={duration}");
+                Logger.Debug($"Starting pattern part. intensity={intensity / 100} duration={duration}");
                 foreach (var device in client.Devices)
                 {
                     device.VibrateAsync(intensity / 100);

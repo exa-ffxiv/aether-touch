@@ -15,6 +15,7 @@ namespace AetherTouch
 
         public string ButtplugIOAddress { get; set; } = "localhost";
         public int ButtplugIOPort { get; set; } = 12345;
+        public bool AutoConnect { get; set; } = false;
 
         private List<Trigger> sortedActiveTriggers = new();
         private Dictionary<Guid, Trigger> _triggers = new();

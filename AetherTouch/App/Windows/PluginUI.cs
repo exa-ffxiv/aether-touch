@@ -25,17 +25,13 @@ namespace AetherTouch.App.Windows
         private ButtplugClient client { get; init; }
         private ATApp app { get; init; }
 
-        private string searchText = string.Empty;
         private string newTriggerName = string.Empty;
         private Trigger? selectedTrigger = null;
         private Guid selectedTriggerId = Guid.Empty;
 
-        private string patternSearchText = string.Empty;
         private string newPatternName = string.Empty;
         private Pattern? selectedPattern = null;
         private Guid selectedPatternId = Guid.Empty;
-
-        private string triggerSearchName = string.Empty;
 
         public PluginUI(Plugin plugin, ButtplugClient client, ATApp app): base(
             "Aether Touch Configuration",
@@ -102,7 +98,10 @@ namespace AetherTouch.App.Windows
             }
 
             ImGui.SetNextItemWidth(200);
-
+            if (app.ClientConnecting)
+            {
+                ImGui.BeginDisabled();
+            }
             if (client.Connected)
             {
                 if (ImGui.Button("Disconnect"))
@@ -113,6 +112,21 @@ namespace AetherTouch.App.Windows
             else
             {
                 if (ImGui.Button("Connect"))
+                {
+                    app.ConnectButtplugIO();
+                }
+            }
+            if (app.ClientConnecting)
+            {
+                ImGui.EndDisabled();
+            }
+            ImGui.SameLine();
+            bool autoConnect = plugin.Configuration.AutoConnect;
+            if (ImGui.Checkbox("Auto Connect", ref autoConnect))
+            {
+                plugin.Configuration.AutoConnect = autoConnect;
+                plugin.Configuration.Save();
+                if (!client.Connected && plugin.Configuration.AutoConnect)
                 {
                     app.ConnectButtplugIO();
                 }
