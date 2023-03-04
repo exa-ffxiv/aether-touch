@@ -42,15 +42,18 @@ namespace AetherTouch.App.Triggers
                 Logger.Debug($"Processing trigger={trigger.Name} type={trigger.chatType}");
                 if (chatTypeMatch(type, trigger.chatType) &&
                     senderMatch(sender, trigger.senderRegex) &&
-                    messageMatch(message, trigger.messageRegex) &&
+                    //messageMatch(message, trigger.messageRegex) &&
                     shouldOverrideRunningTrigger(trigger))
                 {
+                    // TODO: Expand messageMatchResult with capture group data.
+                    var messageMatchResult = messageMatch(message, trigger.messageRegex);
+                    if (!messageMatchResult) continue;
                     if (client == null || !client.Connected || client.Devices.Length == 0)
                     {
                         Logger.Warning($"Triggered but client is not setup. connected={client?.Connected} deviceCount={client?.Devices.Length}");
                         return;
                     }
-                    Logger.Debug("Trigger triggered.");
+                    Logger.Debug($"Trigger triggered. name={trigger.Name}");
                     RunTrigger(trigger);
                     break;
                 }
@@ -83,10 +86,20 @@ namespace AetherTouch.App.Triggers
 
         private bool messageMatch(string message, string messageRegex)
         {
-            if (messageRegex.IsNullOrWhitespace()) return true;
-            var t = new Regex(messageRegex).IsMatch(message);
-            Logger.Debug($"Message compare. result={t} sender='{message}' reges='{messageRegex}'");
-            return t;
+            var matches = new Regex(messageRegex).Matches(message);
+            Logger.Debug($"Message compare. result={matches.Count != 0} message={message} regex={messageRegex}");
+            if (matches.Count == 0) return false;
+            //if (matches.Count > 1)
+            //{
+            //    matches[1].n
+            //}
+
+
+            return true;
+            //if (messageRegex.IsNullOrWhitespace()) return true;
+            //var t = new Regex(messageRegex).IsMatch(message);
+            //Logger.Debug($"Message compare. result={t} message='{message}' regex='{messageRegex}'");
+            //return t;
         }
 
         private bool shouldOverrideRunningTrigger(Trigger newTrigger)
@@ -120,9 +133,12 @@ namespace AetherTouch.App.Triggers
             var patternParts = pattern.PatternText.Split(',').Reverse();
             var patternStack = new Stack<string>();
             foreach (var part in patternParts) { patternStack.Push(part); }
-            foreach (var part in patternStack)
+            while (patternStack.Count > 0)
             {
+                var part = patternStack.Pop();
                 var splitVals = part.Split(":");
+                if (!IsPatternPartValid(pattern, part, splitVals)) continue;
+                if (IsPartInfinite(splitVals)) return;
                 var intensity = double.Parse(splitVals[0]);
                 var duration = int.Parse(splitVals[1]);
                 Logger.Debug($"Starting pattern part. intensity={intensity / 100} duration={duration}");
@@ -133,11 +149,49 @@ namespace AetherTouch.App.Triggers
                 await Task.Delay(duration);
                 if (cancelToken.IsCancellationRequested) return;
             }
+            //foreach (var part in patternStack)
+            //{
+            //    var splitVals = part.Split(":");
+            //    var intensity = double.Parse(splitVals[0]);
+            //    var duration = int.Parse(splitVals[1]);
+            //    Logger.Debug($"Starting pattern part. intensity={intensity / 100} duration={duration}");
+            //    foreach (var device in client.Devices)
+            //    {
+            //        device.VibrateAsync(intensity / 100);
+            //    }
+            //    await Task.Delay(duration);
+            //    if (cancelToken.IsCancellationRequested) return;
+            //}
 
             foreach (var device in client.Devices)
             {
                 device.VibrateAsync(0);
             }
+        }
+
+        private bool IsPatternPartValid(Pattern pattern, string part, string[] parts)
+        {
+            if (parts.Length != 2)
+            {
+                Logger.Warning($"Invalid pattern part length. patternName={pattern.Name} part={part}");
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool IsPartInfinite(string[] parts)
+        {
+            if (parts[1] == "~")
+            {
+                var intensity = double.Parse(parts[0]);
+                foreach (var device in client.Devices)
+                {
+                    device.VibrateAsync(intensity / 100);
+                }
+                return true;
+            }
+            return false;
         }
     }
 }

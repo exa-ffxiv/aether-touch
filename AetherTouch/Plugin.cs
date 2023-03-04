@@ -7,6 +7,8 @@ using Dalamud.Game.Gui;
 using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using AetherTouch.App;
+using Dalamud.Game.ClientState;
+using Dalamud.Game.Network;
 
 namespace AetherTouch
 {
@@ -26,7 +28,8 @@ namespace AetherTouch
         public Plugin(
             [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
             [RequiredVersion("1.0")] CommandManager commandManager,
-            [RequiredVersion("1.0")] ChatGui dalaChat)
+            [RequiredVersion("1.0")] ChatGui dalaChat,
+            [RequiredVersion("1.0")] ClientState clientState)
         {
             this.PluginInterface = pluginInterface;
             this.CommandManager = commandManager;
