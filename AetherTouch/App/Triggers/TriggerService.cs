@@ -42,19 +42,18 @@ namespace AetherTouch.App.Triggers
                 Logger.Debug($"Processing trigger={trigger.Name} type={trigger.chatType}");
                 if (chatTypeMatch(type, trigger.chatType) &&
                     senderMatch(sender, trigger.senderRegex) &&
-                    //messageMatch(message, trigger.messageRegex) &&
                     shouldOverrideRunningTrigger(trigger))
                 {
                     // TODO: Expand messageMatchResult with capture group data.
                     var messageMatchResult = messageMatch(message, trigger.messageRegex);
-                    if (!messageMatchResult) continue;
+                    if (!messageMatchResult.isMatch) continue;
                     if (client == null || !client.Connected || client.Devices.Length == 0)
                     {
                         Logger.Warning($"Triggered but client is not setup. connected={client?.Connected} deviceCount={client?.Devices.Length}");
                         return;
                     }
                     Logger.Debug($"Trigger triggered. name={trigger.Name}");
-                    RunTrigger(trigger);
+                    RunTrigger(trigger, messageMatchResult);
                     break;
                 }
             }
@@ -84,28 +83,27 @@ namespace AetherTouch.App.Triggers
             return t;
         }
 
-        private bool messageMatch(string message, string messageRegex)
+        private MessageMatchResult messageMatch(string message, string messageRegex)
         {
             var matches = new Regex(messageRegex).Matches(message);
             Logger.Debug($"Message compare. result={matches.Count != 0} message={message} regex={messageRegex}");
-            if (matches.Count == 0) return false;
-            //if (matches.Count > 1)
-            //{
-            //    matches[1].n
-            //}
+            if (matches.Count == 0) return new MessageMatchResult(false);
+            var intensity = "";
+            var duration = "";
+            foreach (var group in matches[0].Groups.Values)
+            {
+                if (group.Name == "intensity") intensity = group.Value;
+                if (group.Name == "duration") duration = group.Value;
+            }
 
-
-            return true;
-            //if (messageRegex.IsNullOrWhitespace()) return true;
-            //var t = new Regex(messageRegex).IsMatch(message);
-            //Logger.Debug($"Message compare. result={t} message='{message}' regex='{messageRegex}'");
-            //return t;
+            Logger.Debug($"Regex group results intensity={intensity} duration={duration}");
+            return new MessageMatchResult(true, intensity, duration);
         }
 
         private bool shouldOverrideRunningTrigger(Trigger newTrigger)
         {
             // No running trigger, new one can start.
-            if (currentRunningTrigger == null) return true;
+            if (activeTask == null || currentRunningTrigger == null) return true;
             // Running trigger is the same as new trigger, restart pattern.
             if (currentRunningTrigger.Id.Equals(newTrigger.Id)) return true;
             // Run new trigger if higher priority than running trigger.
@@ -114,7 +112,7 @@ namespace AetherTouch.App.Triggers
 
         // TODO: A lot more error handling
         // TODO: Let different devices get different patterns?
-        private void RunTrigger(Trigger trigger)
+        private void RunTrigger(Trigger trigger, MessageMatchResult messageMatchResult)
         {
             if (activeTask != null)
             {
@@ -124,11 +122,12 @@ namespace AetherTouch.App.Triggers
             if (plugin.Configuration.Patterns.TryGetValue(trigger.patternId, out var pattern))
             {
                 cancelTokenSource = new CancellationTokenSource();
-                activeTask = Task.Run(() => TriggerTask(cancelTokenSource.Token, pattern));
+                currentRunningTrigger = trigger;
+                activeTask = Task.Run(() => TriggerTask(cancelTokenSource.Token, pattern, messageMatchResult));
             }
         }
 
-        private async Task TriggerTask(CancellationToken cancelToken, Pattern pattern)
+        private async Task TriggerTask(CancellationToken cancelToken, Pattern pattern, MessageMatchResult messageMatchResult)
         {
             var patternParts = pattern.PatternText.Split(',').Reverse();
             var patternStack = new Stack<string>();
@@ -138,9 +137,16 @@ namespace AetherTouch.App.Triggers
                 var part = patternStack.Pop();
                 var splitVals = part.Split(":");
                 if (!IsPatternPartValid(pattern, part, splitVals)) continue;
-                if (IsPartInfinite(splitVals)) return;
-                var intensity = double.Parse(splitVals[0]);
-                var duration = int.Parse(splitVals[1]);
+
+                var intensityString = splitVals[0];
+                var durationString = splitVals[1];
+                if (intensityString.Contains("{intensity}")) intensityString = messageMatchResult.intensity;
+                if (durationString.Contains("{duration}")) durationString = messageMatchResult.duration;
+
+                if (IsPartInfinite(intensityString, durationString)) return;
+
+                var intensity = double.Parse(intensityString);
+                var duration = int.Parse(durationString);
                 Logger.Debug($"Starting pattern part. intensity={intensity / 100} duration={duration}");
                 foreach (var device in client.Devices)
                 {
@@ -149,24 +155,12 @@ namespace AetherTouch.App.Triggers
                 await Task.Delay(duration);
                 if (cancelToken.IsCancellationRequested) return;
             }
-            //foreach (var part in patternStack)
-            //{
-            //    var splitVals = part.Split(":");
-            //    var intensity = double.Parse(splitVals[0]);
-            //    var duration = int.Parse(splitVals[1]);
-            //    Logger.Debug($"Starting pattern part. intensity={intensity / 100} duration={duration}");
-            //    foreach (var device in client.Devices)
-            //    {
-            //        device.VibrateAsync(intensity / 100);
-            //    }
-            //    await Task.Delay(duration);
-            //    if (cancelToken.IsCancellationRequested) return;
-            //}
 
             foreach (var device in client.Devices)
             {
                 device.VibrateAsync(0);
             }
+            currentRunningTrigger = null;
         }
 
         private bool IsPatternPartValid(Pattern pattern, string part, string[] parts)
@@ -180,11 +174,13 @@ namespace AetherTouch.App.Triggers
             return true;
         }
 
-        private bool IsPartInfinite(string[] parts)
+        private bool IsPartInfinite(string intensityStr, string durationStr)
         {
-            if (parts[1] == "~")
+            if (durationStr == "~")
             {
-                var intensity = double.Parse(parts[0]);
+                currentRunningTrigger = null;
+                activeTask = null;
+                var intensity = double.Parse(intensityStr);
                 foreach (var device in client.Devices)
                 {
                     device.VibrateAsync(intensity / 100);
@@ -193,5 +189,21 @@ namespace AetherTouch.App.Triggers
             }
             return false;
         }
+
+        //private bool IsPartInfinite(string[] parts)
+        //{
+        //    if (parts[1] == "~")
+        //    {
+        //        currentRunningTrigger = null;
+        //        activeTask = null;
+        //        var intensity = double.Parse(parts[0]);
+        //        foreach (var device in client.Devices)
+        //        {
+        //            device.VibrateAsync(intensity / 100);
+        //        }
+        //        return true;
+        //    }
+        //    return false;
+        //}
     }
 }
