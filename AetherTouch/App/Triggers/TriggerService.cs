@@ -19,6 +19,7 @@ namespace AetherTouch.App.Triggers
     {
         private Plugin plugin { get; init; }
         private ButtplugClient client { get; init; }
+        private ATApp app { get; init; }
 
         private Regex combatRegex = new(@"[0-9]+");
 
@@ -26,10 +27,11 @@ namespace AetherTouch.App.Triggers
         private Task? activeTask = null;
         private CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
 
-        public TriggerService(Plugin plugin, ButtplugClient client)
+        public TriggerService(Plugin plugin, ButtplugClient client, ATApp app)
         { 
             this.plugin = plugin;
             this.client = client;
+            this.app = app;
         }
 
         public void ProcessTextTriggers(XivChatType type, string sender, string message)
@@ -145,21 +147,17 @@ namespace AetherTouch.App.Triggers
 
                 if (IsPartInfinite(intensityString, durationString)) return;
 
-                var intensity = double.Parse(intensityString);
-                var duration = int.Parse(durationString);
-                Logger.Debug($"Starting pattern part. intensity={intensity / 100} duration={duration}");
-                foreach (var device in client.Devices)
+                if (double.TryParse(intensityString, out double intensity) && int.TryParse(durationString, out int duration))
                 {
-                    device.VibrateAsync(intensity / 100);
+                    intensity = Math.Clamp(intensity, 0, 100);
+                    Logger.Debug($"Starting pattern part. intensity={intensity / 100} duration={duration}");
+                    app.VibeAllDevices(intensity);
+                    await Task.Delay(duration);
+                    if (cancelToken.IsCancellationRequested) return;
                 }
-                await Task.Delay(duration);
-                if (cancelToken.IsCancellationRequested) return;
             }
 
-            foreach (var device in client.Devices)
-            {
-                device.VibrateAsync(0);
-            }
+            app.VibeAllDevices(0);
             currentRunningTrigger = null;
         }
 
@@ -176,34 +174,15 @@ namespace AetherTouch.App.Triggers
 
         private bool IsPartInfinite(string intensityStr, string durationStr)
         {
-            if (durationStr == "~")
+            if (durationStr == "~" && double.TryParse(intensityStr, out double intensity))
             {
                 currentRunningTrigger = null;
                 activeTask = null;
-                var intensity = double.Parse(intensityStr);
-                foreach (var device in client.Devices)
-                {
-                    device.VibrateAsync(intensity / 100);
-                }
+                intensity = Math.Clamp(intensity, 0, 100);
+                app.VibeAllDevices(intensity);
                 return true;
             }
             return false;
         }
-
-        //private bool IsPartInfinite(string[] parts)
-        //{
-        //    if (parts[1] == "~")
-        //    {
-        //        currentRunningTrigger = null;
-        //        activeTask = null;
-        //        var intensity = double.Parse(parts[0]);
-        //        foreach (var device in client.Devices)
-        //        {
-        //            device.VibrateAsync(intensity / 100);
-        //        }
-        //        return true;
-        //    }
-        //    return false;
-        //}
     }
 }

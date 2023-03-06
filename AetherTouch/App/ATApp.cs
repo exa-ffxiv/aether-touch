@@ -129,5 +129,14 @@ namespace AetherTouch.App
 
             return client.Devices;
         }
+
+        public async void VibeAllDevices(double intensityPercent)
+        {
+            foreach (var device in client.Devices)
+            {
+                if (device == null) continue;
+                device.VibrateAsync(intensityPercent / 100);
+            }
+        }
     }
 }
