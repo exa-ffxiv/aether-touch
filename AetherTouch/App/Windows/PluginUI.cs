@@ -33,6 +33,9 @@ namespace AetherTouch.App.Windows
         private Pattern? selectedPattern = null;
         private Guid selectedPatternId = Guid.Empty;
 
+        private string patternSearch = string.Empty;
+
+        private string triggerSearch = string.Empty;
         private string triggerPatternSearch = string.Empty;
 
         public PluginUI(Plugin plugin, ButtplugClient client, ATApp app): base(
@@ -193,12 +196,11 @@ namespace AetherTouch.App.Windows
                         newPatternName = "";
                     }
                 }
-                string patternSearchName = "";
                 ImGui.SetNextItemWidth(180);
-                ImGui.InputTextWithHint("##patternSearch", "Filter...", ref patternSearchName, 500);
+                ImGui.InputTextWithHint("##patternSearch", "Filter...", ref patternSearch, 500);
                 ImGui.Spacing();
 
-                var patternRegex = new Regex(patternSearchName, RegexOptions.IgnoreCase);
+                var patternRegex = new Regex(patternSearch, RegexOptions.IgnoreCase);
                 foreach (var pattern in plugin.Configuration.Patterns.Values)
                 {
                     if (!patternRegex.IsMatch(pattern.Name)) continue;
@@ -262,12 +264,12 @@ namespace AetherTouch.App.Windows
                         newTriggerName = "";
                     }
                 }
-                string tempTriggerSearchName = "";
+
                 ImGui.SetNextItemWidth(180);
-                ImGui.InputTextWithHint("##triggerSearch", "Filter...", ref tempTriggerSearchName, 500);
+                ImGui.InputTextWithHint("##triggerSearch", "Filter...", ref triggerSearch, 500);
                 ImGui.Spacing();
 
-                var triggerRegex = new Regex(tempTriggerSearchName, RegexOptions.IgnoreCase);
+                var triggerRegex = new Regex(triggerSearch, RegexOptions.IgnoreCase);
                 foreach (var trigPair in plugin.Configuration.Triggers)
                 {
                     if (!triggerRegex.IsMatch(trigPair.Value.Name)) continue;
