@@ -41,7 +41,7 @@ namespace AetherTouch.App
             
             client = new ButtplugClient("Aether Touch Client");
             PluginUI = new PluginUI(plugin, client, this);
-            triggerService = new TriggerService(plugin, client);
+            triggerService = new TriggerService(plugin, client, this);
 
             if (client != null && !client.Connected && plugin.Configuration.AutoConnect)
             {

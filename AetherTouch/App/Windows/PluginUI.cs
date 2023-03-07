@@ -33,6 +33,8 @@ namespace AetherTouch.App.Windows
         private Pattern? selectedPattern = null;
         private Guid selectedPatternId = Guid.Empty;
 
+        private string triggerPatternSearch = string.Empty;
+
         public PluginUI(Plugin plugin, ButtplugClient client, ATApp app): base(
             "Aether Touch Configuration",
             ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
@@ -300,14 +302,14 @@ namespace AetherTouch.App.Windows
                     }
                     if (ImGui.BeginCombo("Pattern", patternName))
                     {
-                        string triggerPatternIdSearch = "";
-                        ImGui.InputTextWithHint("##PatternFilter", "Filter...", ref triggerPatternIdSearch, 1000);
-                        Regex patternNameRegex = new Regex(triggerPatternIdSearch, RegexOptions.IgnoreCase);
+                        ImGui.InputTextWithHint("##PatternFilter", "Filter...", ref triggerPatternSearch, 1000);
+                        Regex patternNameRegex = new Regex(triggerPatternSearch, RegexOptions.IgnoreCase);
                         foreach (var pattern in plugin.Configuration.Patterns)
                         {
                             if (!patternNameRegex.IsMatch(pattern.Value.Name)) continue;
                             if (ImGui.Selectable($"{pattern.Value.Name}###{pattern.Value.Id}", selectedTrigger.patternId == pattern.Value.Id))
                             {
+                                triggerPatternSearch = string.Empty;
                                 selectedTrigger.patternId = pattern.Value.Id;
                                 SaveTrigger();
                             }
