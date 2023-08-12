@@ -15,6 +15,7 @@ namespace AetherTouch.App.Triggers
         public ChatTypes chatType;
         public Guid patternId = Guid.Empty;
         public int priority = 0;
+        public bool ignoreOwn = false;
 
         public Trigger()
         {

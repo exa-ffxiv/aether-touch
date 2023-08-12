@@ -41,6 +41,7 @@ namespace AetherTouch.App.Triggers
             if (triggers.Count == 0) return;
             foreach (var trigger in triggers) 
             {
+                if (trigger.ignoreOwn && (type == XivChatType.TellOutgoing)) continue; 
                 Logger.Debug($"Processing trigger={trigger.Name} type={trigger.chatType}");
                 if (chatTypeMatch(type, trigger.chatType) &&
                     senderMatch(sender, trigger.senderRegex) &&
@@ -157,7 +158,7 @@ namespace AetherTouch.App.Triggers
                 }
             }
 
-            app.VibeAllDevices(0);
+            app.VibeAllDevices(plugin.Configuration.MinimumVibe);
             currentRunningTrigger = null;
         }
 

@@ -30,9 +30,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Buttplug" Version="3.0.0" />
-    <PackageReference Include="Buttplug.Client.Connectors.WebsocketConnector" Version="3.0.0" />
-    <PackageReference Include="DalamudPackager" Version="2.1.10" />
+    <PackageReference Include="Buttplug" Version="3.0.1" />
+    <PackageReference Include="Buttplug.Client.Connectors.WebsocketConnector" Version="3.0.1" />
+    <PackageReference Include="DalamudPackager" Version="2.1.11" />
     <PackageReference Include="TextCopy" Version="6.2.1" />
     <Reference Include="FFXIVClientStructs">
       <HintPath>$(DalamudLibPath)FFXIVClientStructs.dll</HintPath>

@@ -9,6 +9,9 @@ using Dalamud.Game.Text.SeStringHandling;
 using AetherTouch.App;
 using Dalamud.Game.ClientState;
 using Dalamud.Game.Network;
+using Dalamud.Game.ClientState.Party;
+using Lumina.Excel.GeneratedSheets;
+using AetherTouch.App.Common;
 
 namespace AetherTouch
 {

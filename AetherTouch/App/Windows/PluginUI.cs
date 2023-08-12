@@ -79,6 +79,11 @@ namespace AetherTouch.App.Windows
                     DrawTriggers();
                     ImGui.EndTabItem();
                 }
+                if (ImGui.BeginTabItem("Groups"))
+                {
+                    DrawGroups();
+                    ImGui.EndTabItem();
+                }
                 ImGui.EndTabBar();
             }
         }
@@ -136,6 +141,12 @@ namespace AetherTouch.App.Windows
                     app.ConnectButtplugIO();
                 }
             }
+            double minVibe = plugin.Configuration.MinimumVibe;
+            if (ImGui.InputDouble("Minimum Vibe Level", ref minVibe))
+            {
+                plugin.Configuration.MinimumVibe = minVibe;
+                plugin.Configuration.Save();
+            }
         }
 
         private void DrawDevices()
@@ -154,6 +165,11 @@ namespace AetherTouch.App.Windows
                     if (ImGui.Button("0"))
                     {
                         device.VibrateAsync(0);
+                    }
+                    ImGui.SameLine();
+                    if (ImGui.Button("5"))
+                    {
+                        device.VibrateAsync(.05);
                     }
                     ImGui.SameLine();
                     if (ImGui.Button("25"))
@@ -328,7 +344,7 @@ namespace AetherTouch.App.Windows
                     }
                     var chatTypes = Enum.GetNames(typeof(ChatTypes));
                     int selectedChatType = (int)selectedTrigger.chatType;
-                    if (ImGui.Combo("##ChatTypeCombo", ref selectedChatType, chatTypes, chatTypes.Length))
+                    if (ImGui.Combo("Chat Type", ref selectedChatType, chatTypes, chatTypes.Length))
                     {
                         selectedTrigger.chatType = (ChatTypes)selectedChatType;
                         SaveTrigger();
@@ -338,6 +354,11 @@ namespace AetherTouch.App.Windows
                         SaveTrigger();
                     }
                     if (ImGui.Checkbox("Enabled", ref selectedTrigger.enabled))
+                    {
+                        SaveTrigger();
+                    }
+                    ImGui.SameLine();
+                    if (ImGui.Checkbox("Ignore own tells", ref selectedTrigger.ignoreOwn))
                     {
                         SaveTrigger();
                     }
@@ -351,6 +372,74 @@ namespace AetherTouch.App.Windows
 
                 }
                 
+                ImGui.EndChild();
+            }
+        }
+
+        private void DrawGroups()
+        {
+            if (ImGui.BeginChild("##GroupList", new Vector2(200, -ImGui.GetFrameHeightWithSpacing()), true))
+            {
+                ImGui.SetNextItemWidth(150);
+                ImGui.InputTextWithHint("##newGroupName", "New Pattern Name...", ref newPatternName, 500);
+                ImGui.SameLine();
+                if (ImGui.Button("+", new Vector2(23, 23)))
+                {
+                    if (!newPatternName.IsNullOrWhitespace())
+                    {
+                        var tempPattern = new Pattern(newPatternName);
+                        plugin.Configuration.Patterns.Add(tempPattern.Id, tempPattern);
+                        plugin.Configuration.Save();
+                        newPatternName = "";
+                    }
+                }
+                ImGui.SetNextItemWidth(180);
+                ImGui.InputTextWithHint("##patternSearch", "Filter...", ref patternSearch, 500);
+                ImGui.Spacing();
+
+                var patternRegex = new Regex(patternSearch, RegexOptions.IgnoreCase);
+                foreach (var pattern in plugin.Configuration.Patterns.Values)
+                {
+                    if (!patternRegex.IsMatch(pattern.Name)) continue;
+                    if (ImGui.Selectable($"{pattern.Name}###{pattern.Id}", pattern.Id == selectedPatternId))
+                    {
+                        selectedPattern = pattern;
+                        selectedPatternId = pattern.Id;
+                    }
+                }
+
+                ImGui.EndChild();
+            }
+
+            ImGui.SameLine();
+            if (ImGui.BeginChild("##SelectedPattern", new Vector2(0, -ImGui.GetFrameHeightWithSpacing()), true))
+            {
+                if (selectedPattern != null)
+                {
+                    ImGui.Text(selectedPattern.Id.ToString());
+                    ImGui.SameLine();
+                    if (ImGui.Button("Copy ID"))
+                    {
+                        ClipboardService.SetText(selectedPattern.Id.ToString());
+                    }
+                    if (ImGui.InputText("Name", ref selectedPattern.Name, 500, ImGuiInputTextFlags.CharsNoBlank))
+                    {
+                        plugin.Configuration.Patterns[selectedPatternId] = selectedPattern;
+                        plugin.Configuration.Save();
+                    }
+                    if (ImGui.InputText("Pattern", ref selectedPattern.PatternText, 1000000, ImGuiInputTextFlags.CharsNoBlank))
+                    {
+                        plugin.Configuration.Patterns[selectedPatternId] = selectedPattern;
+                        plugin.Configuration.Save();
+                    }
+                    if (ImGui.Button("Delete"))
+                    {
+                        var temp = selectedPattern;
+                        selectedPattern = null;
+                        plugin.Configuration.Patterns.Remove(temp.Id);
+                    }
+                }
+
                 ImGui.EndChild();
             }
         }

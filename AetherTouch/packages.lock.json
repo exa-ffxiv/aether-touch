@@ -4,30 +4,31 @@
     "net7.0-windows7.0": {
       "Buttplug": {
         "type": "Direct",
-        "requested": "[3.0.0, )",
-        "resolved": "3.0.0",
-        "contentHash": "sMGmj0ARNwA7TINPkRk53hHVkPnYWHi+SqNsDtDLofBTKeYL18eFrRBYBZR/+E5JgYwuSMUpvWS0YT2R3peOCg==",
+        "requested": "[3.0.1, )",
+        "resolved": "3.0.1",
+        "contentHash": "TticN/wYUvOY82dtq0RtzAhbUFockJ+Nq/atwjvIuSSOsU1bSXHB7Y20ZSBxtNOij2Q4QnL+oVLhjhZFchXkww==",
         "dependencies": {
           "Microsoft.CSharp": "4.7.0",
-          "Newtonsoft.Json": "13.0.2"
+          "Newtonsoft.Json": "13.0.2",
+          "System.ValueTuple": "4.5.0"
         }
       },
       "Buttplug.Client.Connectors.WebsocketConnector": {
         "type": "Direct",
-        "requested": "[3.0.0, )",
-        "resolved": "3.0.0",
-        "contentHash": "AmnRh5vw2aV6ygV5mQc2BPCTWy5INNq91DrFtGBeffjNWg2dfERq4CCf1PmDPXxfQiR9pn+2nIex4tKjLGxbeg==",
+        "requested": "[3.0.1, )",
+        "resolved": "3.0.1",
+        "contentHash": "f0MlwFeUB4vC1xWi1amJu2ztKOzneJLgYkxoW656WhNQHc0Jt+JqpPozw1A1D2bagmIPIunG63eySe3IIfu/Ag==",
         "dependencies": {
-          "Buttplug": "3.0.0",
-          "System.Threading.Tasks.Dataflow": "7.0.0",
-          "deniszykov.WebSocketListener": "4.2.15"
+          "Buttplug": "3.0.1",
+          "System.Threading.Channels": "7.0.0",
+          "deniszykov.WebSocketListener": "4.2.16"
         }
       },
       "DalamudPackager": {
         "type": "Direct",
-        "requested": "[2.1.10, )",
-        "resolved": "2.1.10",
-        "contentHash": "S6NrvvOnLgT4GDdgwuKVJjbFo+8ZEj+JsEYk9ojjOR/MMfv1dIFpT8aRJQfI24rtDcw1uF+GnSSMN4WW1yt7fw=="
+        "requested": "[2.1.11, )",
+        "resolved": "2.1.11",
+        "contentHash": "9qlAWoRRTiL/geAvuwR/g6Bcbrd/bJJgVnB/RurBiyKs6srsP0bvpoo8IK+Eg8EA6jWeM6/YJWs66w4FIAzqPw=="
       },
       "TextCopy": {
         "type": "Direct",
@@ -40,8 +41,8 @@
       },
       "deniszykov.WebSocketListener": {
         "type": "Transitive",
-        "resolved": "4.2.15",
-        "contentHash": "hHYb5vnNfpP/XLGLzLNOHQEuYoozr+jCtUGxWSkJRk/nPJjiBm2crMsmPvIwXcT6GCWZcRQm2LZWh9pS58DozQ==",
+        "resolved": "4.2.16",
+        "contentHash": "WmmZWR2augvA1BHZAgiQztSht3BT48DuVXO9NvC9z7P71W6bFFjeikYGLuf24IYHYMQFP/voPkZ/+3H7s9ac8A==",
         "dependencies": {
           "NETStandard.Library": "1.6.1"
         }
@@ -888,6 +889,11 @@
           "System.Threading.Tasks": "4.3.0"
         }
       },
+      "System.Threading.Channels": {
+        "type": "Transitive",
+        "resolved": "7.0.0",
+        "contentHash": "qmeeYNROMsONF6ndEZcIQ+VxR4Q/TX/7uIVLJqtwIWL7dDWeh0l1UIqgo4wYyjG//5lUNhwkLDSFl+pAWO6oiA=="
+      },
       "System.Threading.Tasks": {
         "type": "Transitive",
         "resolved": "4.3.0",
@@ -897,11 +903,6 @@
           "Microsoft.NETCore.Targets": "1.1.0",
           "System.Runtime": "4.3.0"
         }
-      },
-      "System.Threading.Tasks.Dataflow": {
-        "type": "Transitive",
-        "resolved": "7.0.0",
-        "contentHash": "BmSJ4b0e2nlplV/RdWVxvH7WECTHACofv06dx/JwOYc0n56eK1jIWdQKNYYsReSO4w8n1QA5stOzSQcfaVBkJg=="
       },
       "System.Threading.Tasks.Extensions": {
         "type": "Transitive",
@@ -922,6 +923,11 @@
           "Microsoft.NETCore.Targets": "1.1.0",
           "System.Runtime": "4.3.0"
         }
+      },
+      "System.ValueTuple": {
+        "type": "Transitive",
+        "resolved": "4.5.0",
+        "contentHash": "okurQJO6NRE/apDIP23ajJ0hpiNmJ+f0BwOlB/cSqTLQlw5upkf+5+96+iG2Jw40G1fCVCyPz/FhIABUjMR+RQ=="
       },
       "System.Xml.ReaderWriter": {
         "type": "Transitive",
