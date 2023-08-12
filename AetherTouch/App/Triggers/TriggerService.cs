@@ -41,7 +41,7 @@ namespace AetherTouch.App.Triggers
             if (triggers.Count == 0) return;
             foreach (var trigger in triggers) 
             {
-                if (trigger.ignoreOwn && (type == XivChatType.TellOutgoing)) continue; 
+                if (trigger.ignoreOwn && isOwnMessage(sender, type)) continue;
                 Logger.Debug($"Processing trigger={trigger.Name} type={trigger.chatType}");
                 if (chatTypeMatch(type, trigger.chatType) &&
                     senderMatch(sender, trigger.senderRegex) &&
@@ -60,6 +60,21 @@ namespace AetherTouch.App.Triggers
                     break;
                 }
             }
+        }
+
+        private bool isOwnMessage(string sender, XivChatType chatType)
+        {
+            var localPlayerName = plugin?.ClientState?.LocalPlayer?.Name?.TextValue;
+            if (localPlayerName == null)
+            {
+                Logger.Warning("Could not reference player name");
+                return false;
+            }
+            if (sender == null) {
+                return false;
+            }
+
+            return sender == localPlayerName || chatType == XivChatType.TellOutgoing;
         }
 
         private bool chatTypeMatch(XivChatType xivType, ChatTypes atType)

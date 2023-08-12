@@ -25,6 +25,7 @@ namespace AetherTouch
         public Configuration Configuration { get; init; }
         public WindowSystem WindowSystem = new("AetherTouch");
         public ChatGui dalaChat { get; init; }
+        public ClientState ClientState { get; init; }
 
         private ATApp app { get; init; }
 
@@ -36,6 +37,7 @@ namespace AetherTouch
         {
             this.PluginInterface = pluginInterface;
             this.CommandManager = commandManager;
+            this.ClientState = clientState;
 
             this.Configuration = this.PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
             this.Configuration.Initialize(this.PluginInterface);
