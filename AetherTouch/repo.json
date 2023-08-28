@@ -1,0 +1,20 @@
+{
+    "Author": "Exa",
+    "Name": "Aether Touch",
+    "InternalName": "AetherTouch",
+    "AssemblyVersion": "0.0.0.1",
+    "Description": "A description that shows up in /xlplugins. List any major slash-command(s).",
+    "ApplicableVersion": "any",
+    "Tags": [
+        "toys"
+    ],
+    "DalamudApiLevel": 8,
+    "LoadRequiredState": 0,
+    "LoadSync": false,
+    "CanUnloadAsync": false,
+    "LoadPriority": 0,
+    "Punchline": "A plugin for controlling toys through buttplug.io",
+    "DownloadLinkInstall": "https://github.com/exa-ffxiv/aether-touch/releases/tag/0.0.0.1/AetherTouch_0.0.0.1.zip",
+    "DownloadLinkTesting": "https://github.com/exa-ffxiv/aether-touch/releases/tag/0.0.0.1/AetherTouch_0.0.0.1.zip",
+    "DownloadLinkUpdate": "https://github.com/exa-ffxiv/aether-touch/releases/tag/0.0.0.1/AetherTouch_0.0.0.1.zip"
+}

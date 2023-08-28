@@ -358,7 +358,7 @@ namespace AetherTouch.App.Windows
                         SaveTrigger();
                     }
                     ImGui.SameLine();
-                    if (ImGui.Checkbox("Ignore own tells", ref selectedTrigger.ignoreOwn))
+                    if (ImGui.Checkbox("Ignore own messages", ref selectedTrigger.ignoreOwn))
                     {
                         SaveTrigger();
                     }

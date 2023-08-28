@@ -1,11 +1,18 @@
 {
-  "Author": "Exa",
-  "Name": "Aether Touch",
-  "Punchline": "A plugin for controlling toys through buttplug.io",
-  "Description": "A description that shows up in /xlplugins. List any major slash-command(s).",
+    "Author": "Exa",
+    "Name": "Aether Touch",
+    "Punchline": "A plugin for controlling toys through buttplug.io",
+    "Description": "/aethertouch opens the configuration window",
     "InternalName": "aetherTouch",
-  "ApplicableVersion": "any",
-  "Tags": [
-    "toys"
-  ]
+    "ApplicableVersion": "any",
+    "RepoUrl": "https://github.com/exa-ffxiv/aether-touch",
+    "DalamudApiLevel": 8,
+    "IsHide": "False",
+    "IsTestingExclusive": "False",
+    "LoadPriority": 70483,
+    "LoadRequiredState": 2,
+    "LoadSync": true,
+    "Tags": [
+        "toys"
+    ]
 }
