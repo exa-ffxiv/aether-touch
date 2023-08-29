@@ -26,6 +26,7 @@ namespace AetherTouch.App.Windows
         private ATApp app { get; init; }
 
         private string newTriggerName = string.Empty;
+        private TriggerType newTriggerType = TriggerType.Regex;
         private Trigger? selectedTrigger = null;
         private Guid selectedTriggerId = Guid.Empty;
 
@@ -77,11 +78,6 @@ namespace AetherTouch.App.Windows
                 if (ImGui.BeginTabItem("Triggers"))
                 {
                     DrawTriggers();
-                    ImGui.EndTabItem();
-                }
-                if (ImGui.BeginTabItem("Groups"))
-                {
-                    DrawGroups();
                     ImGui.EndTabItem();
                 }
                 ImGui.EndTabBar();
@@ -269,15 +265,33 @@ namespace AetherTouch.App.Windows
             {
                 ImGui.SetNextItemWidth(150);
                 ImGui.InputTextWithHint("##newTriggerName", "New Trigger Name...", ref newTriggerName, 500);
+                if (ImGui.BeginCombo("##newTriggerType", newTriggerType.ToString()))
+                {
+                    if (ImGui.Selectable("Regex", newTriggerType == TriggerType.Regex))
+                    {
+                        newTriggerType = TriggerType.Regex;
+                    }
+                    if (ImGui.Selectable("Spell", newTriggerType == TriggerType.Spell))
+                    {
+                        newTriggerType = TriggerType.Spell;
+                    }
+                    ImGui.EndCombo();
+                }
                 ImGui.SameLine();
                 if (ImGui.Button("+", new Vector2(23,23)))
                 {
                     if (!newTriggerName.IsNullOrWhitespace())
                     {
                         var tempTrigger = new Trigger(newTriggerName);
+                        if (newTriggerType == TriggerType.Spell)
+                        {
+                            tempTrigger.triggerType = newTriggerType;
+                            tempTrigger.chatType = ChatTypes.Combat;
+                        }
                         plugin.Configuration.Triggers.Add(tempTrigger.Id, tempTrigger);
                         plugin.Configuration.Save();
                         newTriggerName = "";
+                        newTriggerType = TriggerType.Regex;
                     }
                 }
 
@@ -304,144 +318,179 @@ namespace AetherTouch.App.Windows
             {
                 if (selectedTrigger != null)
                 {
-                    if (ImGui.InputText("Name", ref selectedTrigger.Name, 500))
+                    if (selectedTrigger.triggerType == TriggerType.Spell)
                     {
-                        SaveTrigger();
+                        DisplaySpellTrigger();
                     }
-                    // TODO: Pretty up combo box and see about keeping search box at the top
-                    var patternName = "";
-                    if (plugin.Configuration.Patterns.TryGetValue(selectedTrigger.patternId, out var p))
+                    else // Regex Trigger
                     {
-                        patternName = p.Name;
+                        DisplayRegexTrigger();
                     }
-                    else
-                    {
-                        patternName = "None";
-                    }
-                    if (ImGui.BeginCombo("Pattern", patternName))
-                    {
-                        ImGui.InputTextWithHint("##PatternFilter", "Filter...", ref triggerPatternSearch, 1000);
-                        Regex patternNameRegex = new Regex(triggerPatternSearch, RegexOptions.IgnoreCase);
-                        foreach (var pattern in plugin.Configuration.Patterns)
-                        {
-                            if (!patternNameRegex.IsMatch(pattern.Value.Name)) continue;
-                            if (ImGui.Selectable($"{pattern.Value.Name}###{pattern.Value.Id}", selectedTrigger.patternId == pattern.Value.Id))
-                            {
-                                triggerPatternSearch = string.Empty;
-                                selectedTrigger.patternId = pattern.Value.Id;
-                                SaveTrigger();
-                            }
-                        }
-                        ImGui.EndCombo();
-                    }
-                    if (ImGui.InputText("Message Regex", ref selectedTrigger.messageRegex, 10000))
-                    {
-                        SaveTrigger();
-                    }
-                    if (ImGui.InputText("Sender Regex", ref selectedTrigger.senderRegex, 10000))
-                    {
-                        SaveTrigger();
-                    }
-                    var chatTypes = Enum.GetNames(typeof(ChatTypes));
-                    int selectedChatType = (int)selectedTrigger.chatType;
-                    if (ImGui.Combo("Chat Type", ref selectedChatType, chatTypes, chatTypes.Length))
-                    {
-                        selectedTrigger.chatType = (ChatTypes)selectedChatType;
-                        SaveTrigger();
-                    }
-                    if (ImGui.InputInt("Priority", ref selectedTrigger.priority, 1))
-                    {
-                        SaveTrigger();
-                    }
-                    if (ImGui.Checkbox("Enabled", ref selectedTrigger.enabled))
-                    {
-                        SaveTrigger();
-                    }
-                    ImGui.SameLine();
-                    if (ImGui.Checkbox("Ignore own messages", ref selectedTrigger.ignoreOwn))
-                    {
-                        SaveTrigger();
-                    }
-                    if (ImGui.Button("Delete"))
-                    {
-                        var temp = selectedTrigger;
-                        selectedTrigger = null;
-                        plugin.Configuration.Triggers.Remove(temp.Id);
-                        plugin.Configuration.Save();
-                    }
-
                 }
                 
                 ImGui.EndChild();
             }
         }
 
-        private void DrawGroups()
+        private void DisplayRegexTrigger()
         {
-            if (ImGui.BeginChild("##GroupList", new Vector2(200, -ImGui.GetFrameHeightWithSpacing()), true))
+            if (selectedTrigger == null) return;
+
+            if (ImGui.InputText("Trigger Name", ref selectedTrigger.Name, 500))
             {
-                ImGui.SetNextItemWidth(150);
-                ImGui.InputTextWithHint("##newGroupName", "New Pattern Name...", ref newPatternName, 500);
-                ImGui.SameLine();
-                if (ImGui.Button("+", new Vector2(23, 23)))
-                {
-                    if (!newPatternName.IsNullOrWhitespace())
-                    {
-                        var tempPattern = new Pattern(newPatternName);
-                        plugin.Configuration.Patterns.Add(tempPattern.Id, tempPattern);
-                        plugin.Configuration.Save();
-                        newPatternName = "";
-                    }
-                }
-                ImGui.SetNextItemWidth(180);
-                ImGui.InputTextWithHint("##patternSearch", "Filter...", ref patternSearch, 500);
-                ImGui.Spacing();
-
-                var patternRegex = new Regex(patternSearch, RegexOptions.IgnoreCase);
-                foreach (var pattern in plugin.Configuration.Patterns.Values)
-                {
-                    if (!patternRegex.IsMatch(pattern.Name)) continue;
-                    if (ImGui.Selectable($"{pattern.Name}###{pattern.Id}", pattern.Id == selectedPatternId))
-                    {
-                        selectedPattern = pattern;
-                        selectedPatternId = pattern.Id;
-                    }
-                }
-
-                ImGui.EndChild();
+                SaveTrigger();
             }
-
+            // TODO: Pretty up combo box and see about keeping search box at the top
+            var patternName = "";
+            if (plugin.Configuration.Patterns.TryGetValue(selectedTrigger.patternId, out var p))
+            {
+                patternName = p.Name;
+            }
+            else
+            {
+                patternName = "None";
+            }
+            if (ImGui.BeginCombo("Pattern", patternName))
+            {
+                ImGui.InputTextWithHint("##PatternFilter", "Filter...", ref triggerPatternSearch, 1000);
+                Regex patternNameRegex = new Regex(triggerPatternSearch, RegexOptions.IgnoreCase);
+                foreach (var pattern in plugin.Configuration.Patterns)
+                {
+                    if (!patternNameRegex.IsMatch(pattern.Value.Name)) continue;
+                    if (ImGui.Selectable($"{pattern.Value.Name}###{pattern.Value.Id}", selectedTrigger.patternId == pattern.Value.Id))
+                    {
+                        triggerPatternSearch = string.Empty;
+                        selectedTrigger.patternId = pattern.Value.Id;
+                        SaveTrigger();
+                    }
+                }
+                ImGui.EndCombo();
+            }
+            if (ImGui.InputText("Message Regex", ref selectedTrigger.messageRegex, 10000))
+            {
+                SaveTrigger();
+            }
+            if (ImGui.InputText("Sender Regex", ref selectedTrigger.senderRegex, 10000))
+            {
+                SaveTrigger();
+            }
+            var chatTypes = Enum.GetNames(typeof(ChatTypes));
+            int selectedChatType = (int)selectedTrigger.chatType;
+            if (ImGui.Combo("Chat Type", ref selectedChatType, chatTypes, chatTypes.Length))
+            {
+                selectedTrigger.chatType = (ChatTypes)selectedChatType;
+                SaveTrigger();
+            }
+            if (ImGui.InputInt("Priority", ref selectedTrigger.priority, 1))
+            {
+                SaveTrigger();
+            }
+            if (ImGui.Checkbox("Enabled", ref selectedTrigger.enabled))
+            {
+                SaveTrigger();
+            }
             ImGui.SameLine();
-            if (ImGui.BeginChild("##SelectedPattern", new Vector2(0, -ImGui.GetFrameHeightWithSpacing()), true))
+            if (ImGui.Checkbox("Ignore own messages", ref selectedTrigger.ignoreOwn))
             {
-                if (selectedPattern != null)
+                SaveTrigger();
+            }
+            if (ImGui.Button("Delete"))
+            {
+                var temp = selectedTrigger;
+                selectedTrigger = null;
+                plugin.Configuration.Triggers.Remove(temp.Id);
+                plugin.Configuration.Save();
+            }
+        }
+
+        private void DisplaySpellTrigger()
+        {
+            if (selectedTrigger == null) return;
+
+            if (ImGui.InputText("Trigger Name", ref selectedTrigger.Name, 500))
+            {
+                SaveTrigger();
+            }
+            // TODO: Pretty up combo box and see about keeping search box at the top
+            var patternName = "";
+            if (plugin.Configuration.Patterns.TryGetValue(selectedTrigger.patternId, out var p))
+            {
+                patternName = p.Name;
+            }
+            else
+            {
+                patternName = "None";
+            }
+            if (ImGui.BeginCombo("Pattern", patternName))
+            {
+                ImGui.InputTextWithHint("##PatternFilter", "Filter...", ref triggerPatternSearch, 1000);
+                Regex patternNameRegex = new Regex(triggerPatternSearch, RegexOptions.IgnoreCase);
+                foreach (var pattern in plugin.Configuration.Patterns)
                 {
-                    ImGui.Text(selectedPattern.Id.ToString());
-                    ImGui.SameLine();
-                    if (ImGui.Button("Copy ID"))
+                    if (!patternNameRegex.IsMatch(pattern.Value.Name)) continue;
+                    if (ImGui.Selectable($"{pattern.Value.Name}###{pattern.Value.Id}", selectedTrigger.patternId == pattern.Value.Id))
                     {
-                        ClipboardService.SetText(selectedPattern.Id.ToString());
-                    }
-                    if (ImGui.InputText("Name", ref selectedPattern.Name, 500, ImGuiInputTextFlags.CharsNoBlank))
-                    {
-                        plugin.Configuration.Patterns[selectedPatternId] = selectedPattern;
-                        plugin.Configuration.Save();
-                    }
-                    if (ImGui.InputText("Pattern", ref selectedPattern.PatternText, 1000000, ImGuiInputTextFlags.CharsNoBlank))
-                    {
-                        plugin.Configuration.Patterns[selectedPatternId] = selectedPattern;
-                        plugin.Configuration.Save();
-                    }
-                    if (ImGui.Button("Delete"))
-                    {
-                        var temp = selectedPattern;
-                        selectedPattern = null;
-                        plugin.Configuration.Patterns.Remove(temp.Id);
+                        triggerPatternSearch = string.Empty;
+                        selectedTrigger.patternId = pattern.Value.Id;
+                        SaveTrigger();
                     }
                 }
-
-                ImGui.EndChild();
+                ImGui.EndCombo();
             }
+            if (ImGui.InputText("Spell or Ability name", ref selectedTrigger.spellName, 10000))
+            {
+                SetSpellTriggerMessageRegex();
+                SaveTrigger();
+            }
+            if (ImGui.Checkbox("Begin Casting", ref selectedTrigger.onBeginCast))
+            {
+                SetSpellTriggerMessageRegex();
+                SaveTrigger();
+            }
+            ImGui.SameLine();
+            if (ImGui.Checkbox("Finish Casting", ref selectedTrigger.onAbilityUsage))
+            {
+                SetSpellTriggerMessageRegex();
+                SaveTrigger();
+            }
+            ImGui.SameLine();
+            if (ImGui.Checkbox("Cancel Cast", ref selectedTrigger.onCancelCast))
+            {
+                SetSpellTriggerMessageRegex();
+                SaveTrigger();
+            }
+
+            if (ImGui.Button("Delete"))
+            {
+                var temp = selectedTrigger;
+                selectedTrigger = null;
+                plugin.Configuration.Triggers.Remove(temp.Id);
+                plugin.Configuration.Save();
+            }
+        }
+
+        private void SetSpellTriggerMessageRegex()
+        {
+            if (selectedTrigger == null) return;
+
+            StringBuilder sb = new StringBuilder();
+            sb.Append("(?:");
+            if (selectedTrigger.onBeginCast)
+            {
+                sb.Append($"You begin casting {selectedTrigger.spellName}|You ready {selectedTrigger.spellName}");
+            }
+            if (selectedTrigger.onCancelCast)
+            {
+                if (sb.Length > 3) sb.Append('|');
+                sb.Append($"You cancel {selectedTrigger.spellName}");
+            }
+            if (selectedTrigger.onAbilityUsage)
+            {
+                if (sb.Length > 3) sb.Append('|');
+                sb.Append($"You use {selectedTrigger.spellName}|You cast {selectedTrigger.spellName}");
+            }
+            sb.Append(")");
+            selectedTrigger.messageRegex = sb.ToString();
         }
 
         private void SaveTrigger()

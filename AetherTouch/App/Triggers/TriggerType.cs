@@ -9,6 +9,7 @@ namespace AetherTouch.App.Triggers
     public enum TriggerType
     {
         None,
-        Regex
+        Regex,
+        Spell
     }
 }

@@ -16,6 +16,12 @@ namespace AetherTouch.App.Triggers
         public Guid patternId = Guid.Empty;
         public int priority = 0;
         public bool ignoreOwn = false;
+        public TriggerType triggerType;
+        // Spell Trigger
+        public string spellName = string.Empty;
+        public bool onBeginCast = true;
+        public bool onCancelCast = false;
+        public bool onAbilityUsage = false;
 
         public Trigger()
         {
@@ -24,6 +30,7 @@ namespace AetherTouch.App.Triggers
             this.messageRegex = string.Empty;
             this.senderRegex = string.Empty;
             this.chatType = ChatTypes.Any;
+            this.triggerType = TriggerType.Regex;
         }
 
         public Trigger(string name)
@@ -33,6 +40,7 @@ namespace AetherTouch.App.Triggers
             this.messageRegex = string.Empty;
             this.senderRegex = string.Empty;
             this.chatType = ChatTypes.Any;
+            this.triggerType = TriggerType.Regex;
         }
 
         public int CompareTo(Trigger? other)
