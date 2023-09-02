@@ -11,12 +11,14 @@ namespace AetherTouch.App.Common
         public bool isMatch { get; set; }
         public string intensity { get; set; }
         public string duration { get; set; }
+        public string patternText { get; set; }
 
-        public MessageMatchResult(bool isMatch, string intensity = "", string duration = "")
+        public MessageMatchResult(bool isMatch, string intensity = "", string duration = "", string patternText = "")
         { 
             this.isMatch = isMatch;
             this.intensity = intensity;
             this.duration = duration;
+            this.patternText = patternText;
         }
     }
 }

@@ -108,14 +108,16 @@ namespace AetherTouch.App.Triggers
             if (matches.Count == 0) return new MessageMatchResult(false);
             var intensity = "";
             var duration = "";
+            var patternText = string.Empty;
             foreach (var group in matches[0].Groups.Values)
             {
                 if (group.Name == "intensity") intensity = group.Value;
                 if (group.Name == "duration") duration = group.Value;
+                if (group.Name == "patternText") patternText = group.Value;
             }
 
             Logger.Debug($"Regex group results intensity={intensity} duration={duration}");
-            return new MessageMatchResult(true, intensity, duration);
+            return new MessageMatchResult(true, intensity, duration, patternText);
         }
 
         private bool shouldOverrideRunningTrigger(Trigger newTrigger)
@@ -137,7 +139,7 @@ namespace AetherTouch.App.Triggers
                 cancelTokenSource.Cancel();
                 activeTask = null;
             }
-            if (plugin.Configuration.Patterns.TryGetValue(trigger.patternId, out var pattern))
+            if (plugin.Configuration.Patterns.TryGetValue(trigger.patternId, out var pattern) || messageMatchResult.patternText != string.Empty)
             {
                 cancelTokenSource = new CancellationTokenSource();
                 currentRunningTrigger = trigger;
@@ -147,7 +149,22 @@ namespace AetherTouch.App.Triggers
 
         private async Task TriggerTask(CancellationToken cancelToken, Pattern pattern, MessageMatchResult messageMatchResult)
         {
-            var patternParts = pattern.PatternText.Split(',').Reverse();
+            var patternString = string.Empty;
+            if (messageMatchResult.patternText != null && messageMatchResult.patternText != string.Empty)
+            {
+                patternString = messageMatchResult.patternText;
+            }
+            else if (pattern != null)
+            {
+                patternString = pattern.PatternText;
+            }
+            else
+            {
+                // Invalid input
+                Logger.Error("Invalid trigger task, null pattern or no pattern string in message match.");
+                return;
+            }
+            var patternParts = patternString.Split(',').Reverse();
             var patternStack = new Stack<string>();
             foreach (var part in patternParts) { patternStack.Push(part); }
             while (patternStack.Count > 0)
@@ -181,7 +198,7 @@ namespace AetherTouch.App.Triggers
         {
             if (parts.Length != 2)
             {
-                Logger.Warning($"Invalid pattern part length. patternName={pattern.Name} part={part}");
+                Logger.Warning($"Invalid pattern part length. patternName={pattern?.Name} part={part}");
                 return false;
             }
 
