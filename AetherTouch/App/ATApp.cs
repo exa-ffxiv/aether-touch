@@ -6,6 +6,7 @@ using Buttplug.Client.Connectors.WebsocketConnector;
 using Dalamud.Game.Gui;
 using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
+using Dalamud.Plugin.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,7 +19,7 @@ namespace AetherTouch.App
     public class ATApp: IDisposable
     {
         private Plugin Plugin { get; init; }
-        private ChatGui? DalaChat { get; init; }
+        private IChatGui? DalaChat { get; init; }
         public ButtplugClient client { get; init; }
         public TriggerService triggerService { get; init; }
 
@@ -26,7 +27,7 @@ namespace AetherTouch.App
 
         public bool ClientConnecting { get; set; } = false;
 
-        public ATApp(Plugin plugin, ChatGui? dalaChat)
+        public ATApp(Plugin plugin, IChatGui? dalaChat)
         {
             Plugin = plugin;
             DalaChat = dalaChat;

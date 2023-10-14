@@ -12,6 +12,7 @@ using Dalamud.Game.Network;
 using Dalamud.Game.ClientState.Party;
 using Lumina.Excel.GeneratedSheets;
 using AetherTouch.App.Common;
+using Dalamud.Plugin.Services;
 
 namespace AetherTouch
 {
@@ -21,19 +22,19 @@ namespace AetherTouch
         private const string SettingsCommand = "/aethertouch";
 
         private DalamudPluginInterface PluginInterface { get; init; }
-        private CommandManager CommandManager { get; init; }
+        private ICommandManager CommandManager { get; init; }
         public Configuration Configuration { get; init; }
         public WindowSystem WindowSystem = new("AetherTouch");
-        public ChatGui dalaChat { get; init; }
-        public ClientState ClientState { get; init; }
+        public IChatGui dalaChat { get; init; }
+        public IClientState ClientState { get; init; }
 
         private ATApp app { get; init; }
 
         public Plugin(
             [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
-            [RequiredVersion("1.0")] CommandManager commandManager,
-            [RequiredVersion("1.0")] ChatGui dalaChat,
-            [RequiredVersion("1.0")] ClientState clientState)
+            [RequiredVersion("1.0")] ICommandManager commandManager,
+            [RequiredVersion("1.0")] IChatGui dalaChat,
+            [RequiredVersion("1.0")] IClientState clientState)
         {
             this.PluginInterface = pluginInterface;
             this.CommandManager = commandManager;
