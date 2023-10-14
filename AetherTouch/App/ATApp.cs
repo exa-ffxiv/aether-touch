@@ -33,7 +33,7 @@ namespace AetherTouch.App
             DalaChat = dalaChat;
             if (DalaChat == null)
             {
-                Dalamud.Logging.PluginLog.Error("DalaChat is null. Unable to setup chat handler.");
+                Logger.Error("DalaChat is null. Unable to setup chat handler.");
             }
             else
             {
@@ -84,7 +84,7 @@ namespace AetherTouch.App
                         }
                         catch (Exception ex)
                         {
-                            Dalamud.Logging.PluginLog.Error($"Failed to connect to server. Uri={uri} Exception={ex}");
+                            Logger.Error($"Failed to connect to server. Uri={uri} Exception={ex}");
                         }
                         finally
                         {
@@ -95,7 +95,7 @@ namespace AetherTouch.App
             }
             catch (Exception ex)
             {
-                Dalamud.Logging.PluginLog.Error($"Failed to connect to server. Uri={uri} Exception={ex}");
+                Logger.Error($"Failed to connect to server. Uri={uri} Exception={ex}");
             }
         }
 
@@ -110,7 +110,7 @@ namespace AetherTouch.App
             }
             catch (Exception ex)
             {
-                Dalamud.Logging.PluginLog.Error($"Failed to disconnect to server. Exception={ex}");
+                Logger.Error($"Failed to disconnect to server. Exception={ex}");
             }
         }
 

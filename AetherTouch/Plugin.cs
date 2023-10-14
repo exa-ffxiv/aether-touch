@@ -34,11 +34,14 @@ namespace AetherTouch
             [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
             [RequiredVersion("1.0")] ICommandManager commandManager,
             [RequiredVersion("1.0")] IChatGui dalaChat,
-            [RequiredVersion("1.0")] IClientState clientState)
+            [RequiredVersion("1.0")] IClientState clientState,
+            [RequiredVersion("1.0")] IPluginLog logger)
         {
             this.PluginInterface = pluginInterface;
             this.CommandManager = commandManager;
             this.ClientState = clientState;
+            this.dalaChat = dalaChat;
+            Logger.initialize(logger);
 
             this.Configuration = this.PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
             this.Configuration.Initialize(this.PluginInterface);

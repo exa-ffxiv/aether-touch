@@ -141,6 +141,11 @@ namespace AetherTouch.App.Triggers
             }
             if (plugin.Configuration.Patterns.TryGetValue(trigger.patternId, out var pattern) || messageMatchResult.patternText != string.Empty)
             {
+                if (pattern == null)
+                {
+                    Logger.Error("Pattern null when running trigger. trigger=" + trigger.patternId);
+                    return;
+                }
                 cancelTokenSource = new CancellationTokenSource();
                 currentRunningTrigger = trigger;
                 activeTask = Task.Run(() => TriggerTask(cancelTokenSource.Token, pattern, messageMatchResult));

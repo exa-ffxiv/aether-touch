@@ -1,31 +1,39 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Dalamud.Plugin.Services;
 
 namespace AetherTouch.App.Common
 {
     public static class Logger
     {
+        private static IPluginLog? Log;
+
+        public static void initialize(IPluginLog log)
+        {
+            if (Log == null) return;
+            Log = log;
+        }
+
         public static void Error(string message)
         {
-            Dalamud.Logging.PluginLog.Error(message);
+            if (Log == null) return;
+            Log.Error(message);
         }
 
         public static void Warning(string message)
         {
-            Dalamud.Logging.PluginLog.Warning(message);
+            if (Log == null) return;
+            Log.Warning(message);
         }
 
         public static void Info(string message)
         {
-            Dalamud.Logging.PluginLog.Information(message);
+            if (Log == null) return;
+            Log.Information(message);
         }
 
         public static void Debug(string message)
         {
-            Dalamud.Logging.PluginLog.Debug(message);
+            if (Log == null) return;
+            Log.Debug(message);
         }
     }
 }
