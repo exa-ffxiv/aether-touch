@@ -106,18 +106,20 @@ namespace AetherTouch.App.Triggers
             var matches = new Regex(messageRegex).Matches(message);
             Logger.Debug($"Message compare. result={matches.Count != 0} message={message} regex={messageRegex}");
             if (matches.Count == 0) return new MessageMatchResult(false);
-            var intensity = "";
-            var duration = "";
+            var intensity = string.Empty;
+            var duration = string.Empty;
             var patternText = string.Empty;
+            var patternName = string.Empty;
             foreach (var group in matches[0].Groups.Values)
             {
                 if (group.Name == "intensity") intensity = group.Value;
                 if (group.Name == "duration") duration = group.Value;
                 if (group.Name == "patternText") patternText = group.Value;
+                if (group.Name == "patternName") patternName = group.Value;
             }
 
             Logger.Debug($"Regex group results intensity={intensity} duration={duration}");
-            return new MessageMatchResult(true, intensity, duration, patternText);
+            return new MessageMatchResult(true, intensity, duration, patternText, patternName);
         }
 
         private bool shouldOverrideRunningTrigger(Trigger newTrigger)
@@ -139,7 +141,7 @@ namespace AetherTouch.App.Triggers
                 cancelTokenSource.Cancel();
                 activeTask = null;
             }
-            if (plugin.Configuration.Patterns.TryGetValue(trigger.patternId, out var pattern) || messageMatchResult.patternText != string.Empty)
+            if (plugin.Configuration.Patterns.TryGetValue(trigger.patternId, out var pattern))
             {
                 if (pattern == null)
                 {
@@ -150,6 +152,17 @@ namespace AetherTouch.App.Triggers
                 currentRunningTrigger = trigger;
                 activeTask = Task.Run(() => TriggerTask(cancelTokenSource.Token, pattern, messageMatchResult));
             }
+            else if (messageMatchResult.patternText != string.Empty)
+            {
+                cancelTokenSource = new CancellationTokenSource();
+                currentRunningTrigger = trigger;
+                var p = new Pattern(messageMatchResult.patternText);
+                activeTask = Task.Run(() => TriggerTask(cancelTokenSource.Token, p, messageMatchResult));
+            }
+            else if (messageMatchResult.patternName != string.Empty)
+            {
+
+            }
         }
 
         private async Task TriggerTask(CancellationToken cancelToken, Pattern pattern, MessageMatchResult messageMatchResult)
@@ -158,6 +171,12 @@ namespace AetherTouch.App.Triggers
             if (messageMatchResult.patternText != null && messageMatchResult.patternText != string.Empty)
             {
                 patternString = messageMatchResult.patternText;
+            }
+            else if (messageMatchResult.patternName != null && messageMatchResult.patternName != string.Empty)
+            {
+                Logger.Info("Foobar");
+                // TODO: fetch pattern by name and put patternText here.
+                patternString = "100:1000,10:1000,100:1000,10:1000";
             }
             else if (pattern != null)
             {

@@ -8,7 +8,6 @@ namespace AetherTouch.App.Common
 
         public static void initialize(IPluginLog log)
         {
-            if (Log == null) return;
             Log = log;
         }
 
