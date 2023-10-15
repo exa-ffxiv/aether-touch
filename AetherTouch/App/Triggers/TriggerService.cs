@@ -161,7 +161,7 @@ namespace AetherTouch.App.Triggers
             }
             else if (messageMatchResult.patternName != string.Empty)
             {
-                var ps = plugin.Configuration.Patterns.Where(x => x.Value.Name.Equals(messageMatchResult.patternName));
+                var ps = plugin.Configuration.Patterns.Where(x => x.Value.Name.ToLower().Equals(messageMatchResult.patternName.ToLower()));
                 if (ps.Any())
                 {
                     var p = ps.First().Value;
