@@ -237,7 +237,7 @@ namespace AetherTouch.App.Windows
                     {
                         ClipboardService.SetText(selectedPattern.Id.ToString());
                     }
-                    if (ImGui.InputText("Name", ref selectedPattern.Name, 500, ImGuiInputTextFlags.CharsNoBlank))
+                    if (ImGui.InputText("Name", ref selectedPattern.Name, 500))
                     {
                         plugin.Configuration.Patterns[selectedPatternId] = selectedPattern;
                         plugin.Configuration.Save();

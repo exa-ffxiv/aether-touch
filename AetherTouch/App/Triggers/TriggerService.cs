@@ -161,24 +161,25 @@ namespace AetherTouch.App.Triggers
             }
             else if (messageMatchResult.patternName != string.Empty)
             {
-
+                var ps = plugin.Configuration.Patterns.Where(x => x.Value.Name.Equals(messageMatchResult.patternName));
+                if (ps.Any())
+                {
+                    var p = ps.First().Value;
+                    cancelTokenSource = new CancellationTokenSource();
+                    currentRunningTrigger = trigger;
+                    activeTask = Task.Run(() => TriggerTask(cancelTokenSource.Token, p, messageMatchResult));
+                }
+                else
+                {
+                    Logger.Info($"No pattern found for patternName={messageMatchResult.patternName}");
+                }
             }
         }
 
         private async Task TriggerTask(CancellationToken cancelToken, Pattern pattern, MessageMatchResult messageMatchResult)
         {
             var patternString = string.Empty;
-            if (messageMatchResult.patternText != null && messageMatchResult.patternText != string.Empty)
-            {
-                patternString = messageMatchResult.patternText;
-            }
-            else if (messageMatchResult.patternName != null && messageMatchResult.patternName != string.Empty)
-            {
-                Logger.Info("Foobar");
-                // TODO: fetch pattern by name and put patternText here.
-                patternString = "100:1000,10:1000,100:1000,10:1000";
-            }
-            else if (pattern != null)
+            if (pattern != null)
             {
                 patternString = pattern.PatternText;
             }
