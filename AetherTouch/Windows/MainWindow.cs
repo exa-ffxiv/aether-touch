@@ -7,22 +7,23 @@ using Dalamud.Interface.Textures;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
+using Dalamud.Plugin.Services;
 using Lumina.Excel.Sheets;
+using Lumina.Text;
 
 namespace AetherTouch.Windows;
 
 public class MainWindow : Window, IDisposable
 {
-    private readonly string goatImagePath;
     private readonly Plugin plugin;
-
-    private ToyClient client = new ToyClient();
+    private readonly ToyClient client;
+    private readonly IToastGui toastGui;
 
     // We give this window a hidden ID using ##.
     // The user will see "My Amazing Window" as window title,
     // but for ImGui the ID is "My Amazing Window##With a hidden ID"
-    public MainWindow(Plugin plugin, string goatImagePath)
-        : base("My Amazing Window##With a hidden ID", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
+    public MainWindow(Plugin plugin, ToyClient toyClient, IToastGui toastGui)
+        : base("Aether Touch##MainWindow", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
     {
         SizeConstraints = new WindowSizeConstraints
         {
@@ -30,8 +31,9 @@ public class MainWindow : Window, IDisposable
             MaximumSize = new Vector2(float.MaxValue, float.MaxValue)
         };
 
-        this.goatImagePath = goatImagePath;
+        this.client = toyClient;
         this.plugin = plugin;
+        this.toastGui = toastGui;
     }
 
     public void Dispose() { }
@@ -49,6 +51,10 @@ public class MainWindow : Window, IDisposable
         if (ImGui.Button("Disconnect"))
         {
             client.disconnect();
+        }
+        if (ImGui.Button("Toast"))
+        {
+            toastGui.ShowNormal("Testing");
         }
         //ImGui.Text($"The random config bool is {plugin.Configuration.SomePropertyToBeSavedAndWithADefault}");
 

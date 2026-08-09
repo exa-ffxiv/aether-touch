@@ -5,6 +5,7 @@ using System.IO;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin.Services;
 using AetherTouch.Windows;
+using System.Collections.Generic;
 
 namespace AetherTouch;
 
@@ -17,6 +18,8 @@ public sealed class Plugin : IDalamudPlugin
     [PluginService] internal static IPlayerState PlayerState { get; private set; } = null!;
     [PluginService] internal static IDataManager DataManager { get; private set; } = null!;
     [PluginService] internal static IPluginLog Log { get; private set; } = null!;
+    [PluginService] internal static IToastGui ToastGui { get; private set; } = null!;
+    [PluginService] internal static IChatGui ChatGui { get; private set; } = null!;
 
     private const string CommandName = "/aetouch";
 
@@ -26,6 +29,8 @@ public sealed class Plugin : IDalamudPlugin
     private ConfigWindow ConfigWindow { get; init; }
     private MainWindow MainWindow { get; init; }
 
+    private ToyClient toyClient = new ToyClient();
+
     public Plugin()
     {
         Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
@@ -34,10 +39,12 @@ public sealed class Plugin : IDalamudPlugin
         var goatImagePath = Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "goat.png");
 
         ConfigWindow = new ConfigWindow(this);
-        MainWindow = new MainWindow(this, goatImagePath);
+        MainWindow = new MainWindow(this, toyClient, ToastGui);
 
         WindowSystem.AddWindow(ConfigWindow);
         WindowSystem.AddWindow(MainWindow);
+
+        ChatGui.ChatMessage += ChatGui_ChatMessage;
 
         CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
         {
@@ -53,11 +60,21 @@ public sealed class Plugin : IDalamudPlugin
 
         // Adds another button doing the same but for the main ui of the plugin
         PluginInterface.UiBuilder.OpenMainUi += ToggleMainUi;
+    }
 
-        // Add a simple message to the log with level set to information
-        // Use /xllog to open the log window in-game
-        // Example Output: 00:57:54.959 | INF | [AetherTouch] ===A cool log message from Sample Plugin===
-        Log.Information($"===A cool log message from {PluginInterface.Manifest.Name}===");
+    private void ChatGui_ChatMessage(Dalamud.Game.Chat.IHandleableChatMessage message)
+    {
+        var filteredKinds = new List<string>() { "Action", "GainBuff", "LoseBuff", "Item" };
+        if (filteredKinds.Contains(message.LogKind.ToString()))
+            return;
+
+        Log.Info($"""
+
+            Text:   {message.OriginalMessage.ExtractText()}
+            Sender: {message.OriginalSender}
+            PayCount: {string.Join(", ", message.Sender.Payloads)}
+            Kind:   {message.LogKind}
+            """);
     }
 
     public void Dispose()

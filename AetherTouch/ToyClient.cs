@@ -7,7 +7,7 @@ using Buttplug.Client;
 
 namespace AetherTouch
 {
-    internal class ToyClient
+    public class ToyClient
     {
         private ButtplugClient client = new ButtplugClient("Aether Touch");
 
