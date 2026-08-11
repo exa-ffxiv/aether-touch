@@ -12,13 +12,12 @@ namespace AetherTouch;
 public sealed class Plugin : IDalamudPlugin
 {
     [PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
-    [PluginService] internal static ITextureProvider TextureProvider { get; private set; } = null!;
     [PluginService] internal static ICommandManager CommandManager { get; private set; } = null!;
     [PluginService] internal static IClientState ClientState { get; private set; } = null!;
     [PluginService] internal static IPlayerState PlayerState { get; private set; } = null!;
     [PluginService] internal static IDataManager DataManager { get; private set; } = null!;
     [PluginService] internal static IPluginLog Log { get; private set; } = null!;
-    [PluginService] internal static IToastGui ToastGui { get; private set; } = null!;
+    [PluginService] internal static INotificationManager DNotificationManager { get; private set; } = null!;
     [PluginService] internal static IChatGui ChatGui { get; private set; } = null!;
 
     private const string CommandName = "/aetouch";
@@ -29,17 +28,23 @@ public sealed class Plugin : IDalamudPlugin
     private ConfigWindow ConfigWindow { get; init; }
     private MainWindow MainWindow { get; init; }
 
-    private ToyClient toyClient = new ToyClient();
+    private readonly NotificationManager notificationManager;
+    private readonly ToyManager toyClient;
 
     public Plugin()
     {
+        // Initialize Aethertouch classes
+        notificationManager = new NotificationManager(DNotificationManager);
+        toyClient = new ToyManager(Log, notificationManager);
+
+        // From sample plugin
         Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
 
         // You might normally want to embed resources and load them from the manifest stream
         var goatImagePath = Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "goat.png");
 
         ConfigWindow = new ConfigWindow(this);
-        MainWindow = new MainWindow(this, toyClient, ToastGui);
+        MainWindow = new MainWindow(this, toyClient, notificationManager, Log);
 
         WindowSystem.AddWindow(ConfigWindow);
         WindowSystem.AddWindow(MainWindow);
@@ -90,6 +95,7 @@ public sealed class Plugin : IDalamudPlugin
         MainWindow.Dispose();
 
         CommandManager.RemoveHandler(CommandName);
+        toyClient.disconnect();
     }
 
     private void OnCommand(string command, string args)

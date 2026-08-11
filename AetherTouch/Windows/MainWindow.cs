@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface.ImGuiNotification;
 using Dalamud.Interface.Textures;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
@@ -16,13 +18,14 @@ namespace AetherTouch.Windows;
 public class MainWindow : Window, IDisposable
 {
     private readonly Plugin plugin;
-    private readonly ToyClient client;
-    private readonly IToastGui toastGui;
+    private readonly ToyManager toyManager;
+    private readonly NotificationManager toastGui;
+    private readonly IPluginLog log;
 
     // We give this window a hidden ID using ##.
     // The user will see "My Amazing Window" as window title,
     // but for ImGui the ID is "My Amazing Window##With a hidden ID"
-    public MainWindow(Plugin plugin, ToyClient toyClient, IToastGui toastGui)
+    public MainWindow(Plugin plugin, ToyManager toyManager, NotificationManager toastGui, IPluginLog log)
         : base("Aether Touch##MainWindow", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
     {
         SizeConstraints = new WindowSizeConstraints
@@ -31,9 +34,10 @@ public class MainWindow : Window, IDisposable
             MaximumSize = new Vector2(float.MaxValue, float.MaxValue)
         };
 
-        this.client = toyClient;
+        this.toyManager = toyManager;
         this.plugin = plugin;
         this.toastGui = toastGui;
+        this.log = log;
     }
 
     public void Dispose() { }
@@ -42,19 +46,30 @@ public class MainWindow : Window, IDisposable
     {
         if (ImGui.Button("Connect"))
         {
-            client.connect();
+            toyManager.connect();
         }
         if (ImGui.Button("Vibe"))
         {
-            client.vibe();
+            toyManager.testVibe();
+        }
+        if (ImGui.Button("Vibe Pattern"))
+        {
+            log.Debug("Starting pattern");
+            var pattern = new Pattern([
+                new Step(500, 25),
+                        new Step(2000, 100),
+                        new Step(500, 0),
+                        new Step(500, 25)
+                ]);
+            toyManager.playPattern(pattern);
         }
         if (ImGui.Button("Disconnect"))
         {
-            client.disconnect();
+            toyManager.disconnect();
         }
         if (ImGui.Button("Toast"))
         {
-            toastGui.ShowNormal("Testing");
+            
         }
         //ImGui.Text($"The random config bool is {plugin.Configuration.SomePropertyToBeSavedAndWithADefault}");
 
