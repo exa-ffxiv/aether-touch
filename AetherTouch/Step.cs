@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace AetherTouch
 {
     public class Step
     {
         private int duration;
+        [JsonPropertyName("d")]
         public int Duration
         {
             get => duration;
@@ -14,6 +16,7 @@ namespace AetherTouch
         }
 
         private int intensity;
+        [JsonPropertyName("i")]
         public int Intensity 
         {
             get => intensity;

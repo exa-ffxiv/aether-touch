@@ -6,6 +6,7 @@ using Dalamud.Interface.Windowing;
 using Dalamud.Plugin.Services;
 using AetherTouch.Windows;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace AetherTouch;
 
@@ -15,7 +16,6 @@ public sealed class Plugin : IDalamudPlugin
     [PluginService] internal static ICommandManager CommandManager { get; private set; } = null!;
     [PluginService] internal static IClientState ClientState { get; private set; } = null!;
     [PluginService] internal static IPlayerState PlayerState { get; private set; } = null!;
-    [PluginService] internal static IDataManager DataManager { get; private set; } = null!;
     [PluginService] internal static IPluginLog Log { get; private set; } = null!;
     [PluginService] internal static INotificationManager DNotificationManager { get; private set; } = null!;
     [PluginService] internal static IChatGui ChatGui { get; private set; } = null!;
@@ -29,12 +29,15 @@ public sealed class Plugin : IDalamudPlugin
     private MainWindow MainWindow { get; init; }
 
     private readonly NotificationManager notificationManager;
+    private readonly DataManager dataManager;
     private readonly ToyManager toyClient;
 
     public Plugin()
     {
         // Initialize Aethertouch classes
         notificationManager = new NotificationManager(DNotificationManager);
+        dataManager = new DataManager(PluginInterface, Log);
+        dataManager.Initialize();
         toyClient = new ToyManager(Log, notificationManager);
 
         // From sample plugin
@@ -69,17 +72,28 @@ public sealed class Plugin : IDalamudPlugin
 
     private void ChatGui_ChatMessage(Dalamud.Game.Chat.IHandleableChatMessage message)
     {
-        var filteredKinds = new List<string>() { "Action", "GainBuff", "LoseBuff", "Item" };
-        if (filteredKinds.Contains(message.LogKind.ToString()))
-            return;
+        var text = message.OriginalMessage.ExtractText();
+        var match = Regex.Match(text, "Test", RegexOptions.IgnoreCase);
+        if (match.Success)
+        {
+            toyClient.playPattern(new Pattern([
+                new Step(500, 25),
+                        new Step(2000, 100),
+                        new Step(500, 0),
+                        new Step(500, 25)
+                ]));
+        }
+        //var filteredKinds = new List<string>() { "Action", "GainBuff", "LoseBuff", "Item" };
+        //if (filteredKinds.Contains(message.LogKind.ToString()))
+        //    return;
 
-        Log.Info($"""
+        //Log.Info($"""
 
-            Text:   {message.OriginalMessage.ExtractText()}
-            Sender: {message.OriginalSender}
-            PayCount: {string.Join(", ", message.Sender.Payloads)}
-            Kind:   {message.LogKind}
-            """);
+        //    Text:   {message.OriginalMessage.ExtractText()}
+        //    Sender: {message.OriginalSender}
+        //    PayCount: {string.Join(", ", message.Sender.Payloads)}
+        //    Kind:   {message.LogKind}
+        //    """);
     }
 
     public void Dispose()
