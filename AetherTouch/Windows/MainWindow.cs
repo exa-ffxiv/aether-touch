@@ -19,13 +19,16 @@ public class MainWindow : Window, IDisposable
 {
     private readonly Plugin plugin;
     private readonly ToyManager toyManager;
+    private readonly DataManager dataManager;
     private readonly NotificationManager toastGui;
     private readonly IPluginLog log;
+
+    private int selectedPatternIndex = -1;
 
     // We give this window a hidden ID using ##.
     // The user will see "My Amazing Window" as window title,
     // but for ImGui the ID is "My Amazing Window##With a hidden ID"
-    public MainWindow(Plugin plugin, ToyManager toyManager, NotificationManager toastGui, IPluginLog log)
+    public MainWindow(Plugin plugin, ToyManager toyManager, NotificationManager toastGui, DataManager dataManager, IPluginLog log)
         : base("Aether Touch##MainWindow", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
     {
         SizeConstraints = new WindowSizeConstraints
@@ -35,6 +38,7 @@ public class MainWindow : Window, IDisposable
         };
 
         this.toyManager = toyManager;
+        this.dataManager = dataManager;
         this.plugin = plugin;
         this.toastGui = toastGui;
         this.log = log;
@@ -44,32 +48,93 @@ public class MainWindow : Window, IDisposable
 
     public override void Draw()
     {
-        if (ImGui.Button("Connect"))
+        if (ImGui.BeginTabBar("Main Window Tabs"))
         {
-            toyManager.connect();
-        }
-        if (ImGui.Button("Vibe"))
-        {
-            toyManager.testVibe();
-        }
-        if (ImGui.Button("Vibe Pattern"))
-        {
-            log.Debug("Starting pattern");
-            var pattern = new Pattern([
-                new Step(500, 25),
+            if (ImGui.BeginTabItem("General"))
+            {
+                if (ImGui.Button("Connect"))
+                {
+                    toyManager.connect();
+                }
+                if (ImGui.Button("Vibe"))
+                {
+                    toyManager.testVibe();
+                }
+                if (ImGui.Button("Vibe Pattern"))
+                {
+                    log.Debug("Starting pattern");
+                    var pattern = new Pattern([
+                        new Step(500, 25),
                         new Step(2000, 100),
                         new Step(500, 0),
                         new Step(500, 25)
-                ]);
-            toyManager.playPattern(pattern);
-        }
-        if (ImGui.Button("Disconnect"))
-        {
-            toyManager.disconnect();
-        }
-        if (ImGui.Button("Toast"))
-        {
+                        ]);
+                    toyManager.playPattern(pattern);
+                }
+                if (ImGui.Button("Disconnect"))
+                {
+                    toyManager.disconnect();
+                }
+                ImGui.EndTabItem();
+            }
+
             
+            if (ImGui.BeginTabItem("Patterns"))
+            {
+                if (ImGui.BeginTable("Pattern Table", 2))
+                {
+                    ImGui.TableSetupColumn("PatternListColumn", ImGuiTableColumnFlags.WidthFixed, 210f);
+                    ImGui.TableNextRow(ImGuiTableRowFlags.None, -1f);
+
+                    ImGui.TableSetColumnIndex(0);
+                    if (ImGui.Button("Test Add"))
+                    {
+                        Pattern p = new Pattern([
+                                new Step(500, 25),
+                                        new Step(2000, 100),
+                                        new Step(500, 0),
+                                        new Step(500, 25)
+                                ], "Testing 1");
+                        dataManager.SavePattern(p);
+                        selectedPatternIndex = dataManager.Patterns.IndexOf(p);
+                    }
+                    //ImGui.SetNextItemWidth(200);
+                    if (ImGui.BeginListBox("##PaternList", new Vector2(200f, ImGui.GetWindowHeight()-85)))
+                    {
+                        for (var i = 0; i < dataManager.Patterns.Count; i++)
+                        {
+                            var pattern = dataManager.Patterns[i];
+                            bool isSelected = selectedPatternIndex == i;
+
+                            string label = $"{pattern.Name}##{pattern.Id}";
+                            if (ImGui.Selectable(label, isSelected))
+                            {
+                                selectedPatternIndex = i;
+                            }
+
+                            if (isSelected)
+                            {
+                                ImGui.SetItemDefaultFocus();
+                            }
+                        }
+                        ImGui.EndListBox();
+                    }
+
+                    ImGui.TableSetColumnIndex(1);
+                    if (selectedPatternIndex > -1 && selectedPatternIndex < dataManager.Patterns.Count)
+                    {
+                        var selected = dataManager.Patterns[selectedPatternIndex];
+                        ImGui.Text($"Name: {selected.Name}");
+                        ImGui.Text($"Id: {selected.Id}");
+                    }
+
+
+                    ImGui.EndTable();
+                }
+
+            }
+
+            ImGui.EndTabBar();
         }
         //ImGui.Text($"The random config bool is {plugin.Configuration.SomePropertyToBeSavedAndWithADefault}");
 

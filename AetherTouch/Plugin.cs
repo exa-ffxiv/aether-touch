@@ -27,6 +27,7 @@ public sealed class Plugin : IDalamudPlugin
     public readonly WindowSystem WindowSystem = new("AetherTouch");
     private ConfigWindow ConfigWindow { get; init; }
     private MainWindow MainWindow { get; init; }
+    private PatternEditWindow PatternEditWindow { get; init; }
 
     private readonly NotificationManager notificationManager;
     private readonly DataManager dataManager;
@@ -47,7 +48,8 @@ public sealed class Plugin : IDalamudPlugin
         var goatImagePath = Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "goat.png");
 
         ConfigWindow = new ConfigWindow(this);
-        MainWindow = new MainWindow(this, toyClient, notificationManager, Log);
+        MainWindow = new MainWindow(this, toyClient, notificationManager, dataManager, Log);
+        PatternEditWindow = new PatternEditWindow(this, dataManager);
 
         WindowSystem.AddWindow(ConfigWindow);
         WindowSystem.AddWindow(MainWindow);
@@ -68,6 +70,14 @@ public sealed class Plugin : IDalamudPlugin
 
         // Adds another button doing the same but for the main ui of the plugin
         PluginInterface.UiBuilder.OpenMainUi += ToggleMainUi;
+
+        //Pattern p = new Pattern([
+        //        new Step(500, 25),
+        //                new Step(2000, 100),
+        //                new Step(500, 0),
+        //                new Step(500, 25)
+        //        ], "Testing 1");
+        //dataManager.SavePattern(p);
     }
 
     private void ChatGui_ChatMessage(Dalamud.Game.Chat.IHandleableChatMessage message)

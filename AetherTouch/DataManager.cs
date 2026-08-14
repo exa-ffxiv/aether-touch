@@ -67,6 +67,15 @@ namespace AetherTouch
             {
                 var json = JsonSerializer.Serialize(p, SerializeOptions);
                 File.WriteAllText(path, json);
+                int index = Patterns.FindIndex(pattern => pattern.Id == p.Id);
+                if (index >= 0)
+                {
+                    Patterns[index] = p;
+                }
+                else
+                {
+                    Patterns.Add(p);
+                }
             }
             catch (Exception ex)
             {
