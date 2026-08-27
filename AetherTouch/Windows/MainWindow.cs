@@ -126,8 +126,30 @@ public class MainWindow : Window, IDisposable
                         var selected = dataManager.Patterns[selectedPatternIndex];
                         ImGui.Text($"Name: {selected.Name}");
                         ImGui.Text($"Id: {selected.Id}");
-                    }
+                        foreach (var step in selected.Steps)
+                        {
+                            var minPos = ImGui.GetCursorScreenPos();
 
+                            ImGui.BeginGroup();
+                            if (ImGui.Button("^"))
+                            {
+
+                            }
+                            ImGui.SameLine();
+                            ImGui.Text($"Step: Duration {step.Duration}ms, Intensity {step.Intensity}%");
+                            ImGui.Text("Testing");
+                            ImGui.EndGroup();
+
+                            var maxPos = ImGui.GetItemRectMax();
+                            minPos.X -= 4.0f;
+                            minPos.Y -= 4.0f;
+                            maxPos.X = ImGui.GetWindowPos().X + ImGui.GetWindowSize().X - 10.0f;
+                            maxPos.Y += 4.0f;
+                            uint borderColor = ImGui.ColorConvertFloat4ToU32(new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+                            ImGui.GetWindowDrawList().AddRect(minPos, maxPos, borderColor, 0.0f, ImDrawFlags.RoundCornersAll, 1.0f);
+                            ImGui.SetCursorScreenPos(ImGui.GetCursorScreenPos() + new Vector2(0.0f, 6.0f));
+                        }
+                    }
 
                     ImGui.EndTable();
                 }
