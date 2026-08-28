@@ -11,7 +11,7 @@ namespace AetherTouch
         public Guid Id { get; init; }
 
         [JsonPropertyName("name")]
-        public string Name { get; init; }
+        public string Name { get; set; }
 
         [JsonPropertyName("steps")]
         public List<Step> Steps { get; init; }
