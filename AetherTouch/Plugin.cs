@@ -4,9 +4,9 @@ using Dalamud.Plugin;
 using System.IO;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin.Services;
-using AetherTouch.Windows;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using AetherTouch.UI.Windows;
 
 namespace AetherTouch;
 
@@ -27,7 +27,6 @@ public sealed class Plugin : IDalamudPlugin
     public readonly WindowSystem WindowSystem = new("AetherTouch");
     private ConfigWindow ConfigWindow { get; init; }
     private MainWindow MainWindow { get; init; }
-    private PatternEditWindow PatternEditWindow { get; init; }
 
     private readonly NotificationManager notificationManager;
     private readonly DataManager dataManager;
@@ -49,7 +48,6 @@ public sealed class Plugin : IDalamudPlugin
 
         ConfigWindow = new ConfigWindow(this);
         MainWindow = new MainWindow(this, toyClient, notificationManager, dataManager, Log);
-        PatternEditWindow = new PatternEditWindow(this, dataManager);
 
         WindowSystem.AddWindow(ConfigWindow);
         WindowSystem.AddWindow(MainWindow);

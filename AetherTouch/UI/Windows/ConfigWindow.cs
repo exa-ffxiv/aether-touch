@@ -3,7 +3,7 @@ using System.Numerics;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Windowing;
 
-namespace AetherTouch.Windows;
+namespace AetherTouch.UI.Windows;
 
 public class ConfigWindow : Window, IDisposable
 {
