@@ -222,6 +222,11 @@ public class MainWindow : Window, IDisposable
                             selected.Steps.Add(newStep);
                             dataManager.SavePattern(selected);
                         }
+                        ImGui.SameLine();
+                        if (ImGui.Button("Test Pattern"))
+                        {
+                            toyManager.playPattern(selected);
+                        }
                     }
 
                     ImGui.EndTable();
